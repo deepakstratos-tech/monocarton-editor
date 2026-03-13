@@ -161,73 +161,92 @@ const IsometricBox = ({ L, W, H }) => {
   const w = W * scale;
   const h = H * scale;
 
-  // Isometric projection factors
-  const ix = 0.866; // cos(30°)
-  const iy = 0.5;   // sin(30°)
+  // Isometric angles
+  const cos30 = Math.cos(Math.PI / 6); // 0.866
+  const sin30 = Math.sin(Math.PI / 6); // 0.5
 
-  const ox = w * ix + 20;
-  const oy = h + w * iy + 20;
+  // Canvas padding
+  const padX = 30;
+  const padY = 20;
 
-  // Front face (bottom left)
-  const frontFace = [
-    [ox, oy],
-    [ox + l * ix, oy - l * iy],
-    [ox + l * ix, oy - l * iy - h],
-    [ox, oy - h],
-  ];
+  // Origin point (bottom left front corner)
+  const ox = padX + w * cos30;
+  const oy = padY + h + l * sin30 + w * sin30;
 
-  // Right face (bottom right)
-  const rightFace = [
-    [ox + l * ix, oy - l * iy],
-    [ox + l * ix + w * ix, oy - l * iy - w * iy],
-    [ox + l * ix + w * ix, oy - l * iy - w * iy - h],
-    [ox + l * ix, oy - l * iy - h],
-  ];
+  // Helper — convert 3D isometric coords to 2D screen coords
+  const iso = (x, y, z) => ({
+    sx: ox + (x - y) * cos30,
+    sy: oy - z - (x + y) * sin30,
+  });
 
-  // Top face
-  const topFace = [
-    [ox, oy - h],
-    [ox + l * ix, oy - l * iy - h],
-    [ox + l * ix + w * ix, oy - l * iy - w * iy - h],
-    [ox + w * ix, oy - w * iy - h],
-  ];
+  // Define the 8 corners of the box
+  // x = along Length, y = along Width, z = along Height
+  const p = (x, y, z) => iso(x, y, z);
 
-  const toPoints = (pts) => pts.map(p => p.join(",")).join(" ");
+  const A = p(0, 0, 0);  // front bottom left
+  const B = p(l, 0, 0);  // front bottom right
+  const C = p(l, w, 0);  // back bottom right
+  const D = p(0, w, 0);  // back bottom left
+  const E = p(0, 0, h);  // front top left
+  const F = p(l, 0, h);  // front top right
+  const G = p(l, w, h);  // back top right
+  const HH = p(0, w, h); // back top left
 
-  const svgW = l * ix + w * ix + 40;
-  const svgH = h + l * iy + w * iy + 40;
+  const pt = (p) => `${p.sx},${p.sy}`;
+  const face = (pts) => pts.map(pt).join(" ");
+
+  const svgW = l * cos30 + w * cos30 + padX * 2 + 20;
+  const svgH = h + l * sin30 + w * sin30 + padY * 2 + 20;
 
   return (
     <svg width={svgW} height={svgH} style={{ display: "block", margin: "0 auto" }}>
-      {/* Front face */}
-      <polygon points={toPoints(frontFace)} fill="#ede9fe" stroke="#7c3aed" strokeWidth="1.5" />
-      {/* Right face */}
-      <polygon points={toPoints(rightFace)} fill="#ddd6fe" stroke="#7c3aed" strokeWidth="1.5" />
+
+      {/* Bottom face (optional, subtle) */}
+      <polygon points={face([A, B, C, D])}
+        fill="#e0d7f7" stroke="#7c3aed" strokeWidth="0.5" opacity="0.4" />
+
+      {/* Left face (front-left) */}
+      <polygon points={face([A, B, F, E])}
+        fill="#ede9fe" stroke="#7c3aed" strokeWidth="1.5" />
+
+      {/* Right face (front-right) */}
+      <polygon points={face([B, C, G, F])}
+        fill="#ddd6fe" stroke="#7c3aed" strokeWidth="1.5" />
+
       {/* Top face */}
-      <polygon points={toPoints(topFace)} fill="#f5f3ff" stroke="#7c3aed" strokeWidth="1.5" />
+      <polygon points={face([E, F, G, HH])}
+        fill="#f5f3ff" stroke="#7c3aed" strokeWidth="1.5" />
 
-      {/* L label */}
+      {/* Edge lines for crispness */}
+      <line x1={A.sx} y1={A.sy} x2={E.sx} y2={E.sy} stroke="#7c3aed" strokeWidth="1" />
+      <line x1={B.sx} y1={B.sy} x2={F.sx} y2={F.sy} stroke="#7c3aed" strokeWidth="1" />
+      <line x1={C.sx} y1={C.sy} x2={G.sx} y2={G.sy} stroke="#7c3aed" strokeWidth="1.5" />
+
+      {/* L dimension label — along bottom front edge */}
       <text
-        x={(frontFace[0][0] + frontFace[1][0]) / 2}
-        y={(frontFace[0][1] + frontFace[1][1]) / 2 + 10}
-        textAnchor="middle" fontSize="9" fill="#7c3aed" fontWeight="bold">
-        L:{L}
+        x={(A.sx + B.sx) / 2}
+        y={(A.sy + B.sy) / 2 + 12}
+        textAnchor="middle" fontSize="9"
+        fill="#7c3aed" fontWeight="bold">
+        L:{L}mm
       </text>
 
-      {/* W label */}
+      {/* W dimension label — along bottom right edge */}
       <text
-        x={(rightFace[0][0] + rightFace[1][0]) / 2 + 6}
-        y={(rightFace[0][1] + rightFace[1][1]) / 2 + 10}
-        textAnchor="middle" fontSize="9" fill="#7c3aed" fontWeight="bold">
-        W:{W}
+        x={(B.sx + C.sx) / 2 + 10}
+        y={(B.sy + C.sy) / 2 + 10}
+        textAnchor="middle" fontSize="9"
+        fill="#7c3aed" fontWeight="bold">
+        W:{W}mm
       </text>
 
-      {/* H label */}
+      {/* H dimension label — along left vertical edge */}
       <text
-        x={frontFace[0][0] - 16}
-        y={(frontFace[0][1] + frontFace[3][1]) / 2}
-        textAnchor="middle" fontSize="9" fill="#7c3aed" fontWeight="bold">
-        H:{H}
+        x={A.sx - 16}
+        y={(A.sy + E.sy) / 2}
+        textAnchor="middle" fontSize="9"
+        fill="#7c3aed" fontWeight="bold">
+        H:{H}mm
       </text>
     </svg>
   );
