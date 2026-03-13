@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { fabric } from "fabric";
 
-const SCALE = 10;
+const SCALE = 0.5; // 1mm = 0.5px
 const BRAND = "#1a4a7a";
 const BRAND_LIGHT = "#e8f0f7";
 const STRAIGHT_COLOR = "#4F86C6";
 const TUMBLE_FLIPPED = "#e67e22";
-
 const API_BASE = "https://web-production-e59f.up.railway.app";
 
 const ALGORITHMS = [
@@ -16,6 +15,13 @@ const ALGORITHMS = [
   { id: "first_fit_decreasing", label: "FFD", icon: "↓→→", desc: "Largest first, then First Fit", endpoint: "/layout/first-fit-decreasing", color: "#e67e22" },
   { id: "nfdh", label: "NFDH", icon: "▬▬▬", desc: "Shelf based, tallest first", endpoint: "/layout/nfdh", color: "#c0392b" },
   { id: "best_fit", label: "Best Fit", icon: "◎◎◎", desc: "Least wasted space per shelf", endpoint: "/layout/best-fit", color: "#16a085" },
+];
+
+const BOX_STYLES = [
+  { id: "bottom_side_lock", label: "Bottom Side Lock", desc: "Most common in pharma" },
+  { id: "straight_tuck_end", label: "Straight Tuck End", desc: "Both tucks same direction" },
+  { id: "reverse_tuck_end", label: "Reverse Tuck End", desc: "Tucks face opposite directions" },
+  { id: "lock_bottom", label: "Lock Bottom", desc: "Pre-glued auto locking base" },
 ];
 
 const Tooltip = ({ text }) => (
@@ -30,16 +36,223 @@ const StatCard = ({ label, value, color, sub }) => (
   </div>
 );
 
+// ── FLAT DIELINE SVG ──
+const FlatDieline = ({ style, L, W, H, flatW, flatH, topTuck, bottomTuck, glueFlap }) => {
+  if (!L || !W || !H) return null;
+
+  const scale = 0.6;
+  const pw = flatW * scale;
+  const ph = flatH * scale;
+  const pL = L * scale;
+  const pW = W * scale;
+  const pTop = topTuck * scale;
+  const pBot = bottomTuck * scale;
+  const pGlue = glueFlap * scale;
+  const pH = H * scale;
+
+  const totalW = pw + pGlue + 10;
+  const totalH = ph + 10;
+  const ox = 5; // offset x
+  const oy = 5; // offset y
+
+  // Panel positions
+  const x0 = ox;                    // start of glue flap
+  const x1 = ox + pGlue;            // start of first L panel
+  const x2 = ox + pGlue + pL;       // start of W panel (front)
+  const x3 = ox + pGlue + pL + pW;  // start of second L panel
+  const x4 = ox + pGlue + pL + pW + pL; // start of back W panel
+
+  const yTop = oy;
+  const yMain = oy + pTop;
+  const yBot = oy + pTop + pH;
+
+  const dimStyle = { fontSize: 8, fill: "#e74c3c", fontFamily: "monospace" };
+  const panelStyle = { fontSize: 7, fill: "#666", fontFamily: "sans-serif" };
+
+  return (
+    <svg width={totalW + 20} height={totalH + 20} style={{ display: "block", margin: "0 auto" }}>
+
+      {/* Top tuck flap */}
+      <rect x={x2} y={yTop} width={pW} height={pTop}
+        fill="#dbeafe" stroke="#3b82f6" strokeWidth="1" strokeDasharray="3,2" />
+      <text x={x2 + pW / 2} y={yTop + pTop / 2} textAnchor="middle" dominantBaseline="middle" style={panelStyle}>TOP TUCK</text>
+
+      {/* Glue flap */}
+      <rect x={x0} y={yMain} width={pGlue} height={pH}
+        fill="#fef9c3" stroke="#eab308" strokeWidth="1" strokeDasharray="3,2" />
+      <text x={x0 + pGlue / 2} y={yMain + pH / 2} textAnchor="middle" dominantBaseline="middle"
+        style={{ ...panelStyle, fontSize: 6 }} transform={`rotate(-90, ${x0 + pGlue / 2}, ${yMain + pH / 2})`}>GLUE</text>
+
+      {/* Left side panel */}
+      <rect x={x1} y={yMain} width={pL} height={pH}
+        fill="#dcfce7" stroke="#16a34a" strokeWidth="1" />
+      <text x={x1 + pL / 2} y={yMain + pH / 2} textAnchor="middle" dominantBaseline="middle" style={panelStyle}>LEFT</text>
+
+      {/* Front panel */}
+      <rect x={x2} y={yMain} width={pW} height={pH}
+        fill="#ede9fe" stroke="#7c3aed" strokeWidth="1.5" />
+      <text x={x2 + pW / 2} y={yMain + pH / 2} textAnchor="middle" dominantBaseline="middle"
+        style={{ ...panelStyle, fontSize: 8, fontWeight: "bold" }}>FRONT</text>
+
+      {/* Right side panel */}
+      <rect x={x3} y={yMain} width={pL} height={pH}
+        fill="#dcfce7" stroke="#16a34a" strokeWidth="1" />
+      <text x={x3 + pL / 2} y={yMain + pH / 2} textAnchor="middle" dominantBaseline="middle" style={panelStyle}>RIGHT</text>
+
+      {/* Back panel */}
+      <rect x={x4} y={yMain} width={pW} height={pH}
+        fill="#f1f5f9" stroke="#64748b" strokeWidth="1" />
+      <text x={x4 + pW / 2} y={yMain + pH / 2} textAnchor="middle" dominantBaseline="middle" style={panelStyle}>BACK</text>
+
+      {/* Bottom tuck/lock */}
+      <rect x={x2} y={yBot} width={pW} height={pBot}
+        fill="#fce7f3" stroke="#db2777" strokeWidth="1" strokeDasharray="3,2" />
+      <text x={x2 + pW / 2} y={yBot + pBot / 2} textAnchor="middle" dominantBaseline="middle"
+        style={{ ...panelStyle, fontSize: 6 }}>
+        {style === "bottom_side_lock" || style === "lock_bottom" ? "BOT LOCK" : "BOT TUCK"}
+      </text>
+
+      {/* ── DIMENSION ANNOTATIONS ── */}
+
+      {/* Flat Width arrow */}
+      <line x1={x1} y1={oy + ph + 16} x2={x1 + pw} y2={oy + ph + 16} stroke="#e74c3c" strokeWidth="1" markerEnd="url(#arrow)" markerStart="url(#arrow)" />
+      <text x={x1 + pw / 2} y={oy + ph + 26} textAnchor="middle" style={dimStyle}>Flat W: {flatW}mm</text>
+
+      {/* Flat Height arrow */}
+      <line x1={totalW + 8} y1={yTop} x2={totalW + 8} y2={yTop + ph} stroke="#e74c3c" strokeWidth="1" />
+      <text x={totalW + 10} y={yTop + ph / 2} dominantBaseline="middle" style={{ ...dimStyle, fontSize: 7 }}>Flat H: {flatH}mm</text>
+
+      {/* Top tuck annotation */}
+      <line x1={x4 + pW + 4} y1={yTop} x2={x4 + pW + 4} y2={yMain} stroke="#3b82f6" strokeWidth="1" strokeDasharray="2,2" />
+      <text x={x4 + pW + 6} y={yTop + pTop / 2} dominantBaseline="middle" style={{ ...dimStyle, fontSize: 6, fill: "#3b82f6" }}>{topTuck}mm</text>
+
+      {/* Height annotation */}
+      <line x1={x4 + pW + 4} y1={yMain} x2={x4 + pW + 4} y2={yBot} stroke="#7c3aed" strokeWidth="1" strokeDasharray="2,2" />
+      <text x={x4 + pW + 6} y={yMain + pH / 2} dominantBaseline="middle" style={{ ...dimStyle, fontSize: 6, fill: "#7c3aed" }}>H:{H}mm</text>
+
+      {/* Bottom tuck annotation */}
+      <line x1={x4 + pW + 4} y1={yBot} x2={x4 + pW + 4} y2={yBot + pBot} stroke="#db2777" strokeWidth="1" strokeDasharray="2,2" />
+      <text x={x4 + pW + 6} y={yBot + pBot / 2} dominantBaseline="middle" style={{ ...dimStyle, fontSize: 6, fill: "#db2777" }}>{bottomTuck}mm</text>
+
+      {/* W annotation */}
+      <line x1={x2} y1={oy - 4} x2={x2 + pW} y2={oy - 4} stroke="#7c3aed" strokeWidth="1" />
+      <text x={x2 + pW / 2} y={oy - 6} textAnchor="middle" style={{ ...dimStyle, fontSize: 6, fill: "#7c3aed" }}>W:{W}mm</text>
+
+      {/* L annotation */}
+      <line x1={x1} y1={oy - 4} x2={x1 + pL} y2={oy - 4} stroke="#16a34a" strokeWidth="1" />
+      <text x={x1 + pL / 2} y={oy - 6} textAnchor="middle" style={{ ...dimStyle, fontSize: 6, fill: "#16a34a" }}>L:{L}mm</text>
+
+      {/* Arrow marker */}
+      <defs>
+        <marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L6,3 z" fill="#e74c3c" />
+        </marker>
+      </defs>
+    </svg>
+  );
+};
+
+// ── 3D ISOMETRIC PREVIEW ──
+const IsometricBox = ({ L, W, H }) => {
+  if (!L || !W || !H) return null;
+
+  const scale = 0.5;
+  const l = L * scale;
+  const w = W * scale;
+  const h = H * scale;
+
+  // Isometric projection factors
+  const ix = 0.866; // cos(30°)
+  const iy = 0.5;   // sin(30°)
+
+  const ox = w * ix + 20;
+  const oy = h + w * iy + 20;
+
+  // Front face (bottom left)
+  const frontFace = [
+    [ox, oy],
+    [ox + l * ix, oy - l * iy],
+    [ox + l * ix, oy - l * iy - h],
+    [ox, oy - h],
+  ];
+
+  // Right face (bottom right)
+  const rightFace = [
+    [ox + l * ix, oy - l * iy],
+    [ox + l * ix + w * ix, oy - l * iy - w * iy],
+    [ox + l * ix + w * ix, oy - l * iy - w * iy - h],
+    [ox + l * ix, oy - l * iy - h],
+  ];
+
+  // Top face
+  const topFace = [
+    [ox, oy - h],
+    [ox + l * ix, oy - l * iy - h],
+    [ox + l * ix + w * ix, oy - l * iy - w * iy - h],
+    [ox + w * ix, oy - w * iy - h],
+  ];
+
+  const toPoints = (pts) => pts.map(p => p.join(",")).join(" ");
+
+  const svgW = l * ix + w * ix + 40;
+  const svgH = h + l * iy + w * iy + 40;
+
+  return (
+    <svg width={svgW} height={svgH} style={{ display: "block", margin: "0 auto" }}>
+      {/* Front face */}
+      <polygon points={toPoints(frontFace)} fill="#ede9fe" stroke="#7c3aed" strokeWidth="1.5" />
+      {/* Right face */}
+      <polygon points={toPoints(rightFace)} fill="#ddd6fe" stroke="#7c3aed" strokeWidth="1.5" />
+      {/* Top face */}
+      <polygon points={toPoints(topFace)} fill="#f5f3ff" stroke="#7c3aed" strokeWidth="1.5" />
+
+      {/* L label */}
+      <text
+        x={(frontFace[0][0] + frontFace[1][0]) / 2}
+        y={(frontFace[0][1] + frontFace[1][1]) / 2 + 10}
+        textAnchor="middle" fontSize="9" fill="#7c3aed" fontWeight="bold">
+        L:{L}
+      </text>
+
+      {/* W label */}
+      <text
+        x={(rightFace[0][0] + rightFace[1][0]) / 2 + 6}
+        y={(rightFace[0][1] + rightFace[1][1]) / 2 + 10}
+        textAnchor="middle" fontSize="9" fill="#7c3aed" fontWeight="bold">
+        W:{W}
+      </text>
+
+      {/* H label */}
+      <text
+        x={frontFace[0][0] - 16}
+        y={(frontFace[0][1] + frontFace[3][1]) / 2}
+        textAnchor="middle" fontSize="9" fill="#7c3aed" fontWeight="bold">
+        H:{H}
+      </text>
+    </svg>
+  );
+};
+
 export default function App() {
   const canvasRef = useRef(null);
   const fabricRef = useRef(null);
 
-  const [cartonW, setCartonW] = useState(6);
-  const [cartonH, setCartonH] = useState(9);
-  const [sheetW, setSheetW] = useState(23);
-  const [sheetH, setSheetH] = useState(36);
-  const [margin, setMargin] = useState(1);
-  const [nestingPct, setNestingPct] = useState(10);
+  // Carton spec
+  const [boxStyle, setBoxStyle] = useState("bottom_side_lock");
+  const [length, setLength] = useState(45);
+  const [width, setWidth] = useState(45);
+  const [height, setHeight] = useState(83);
+  const [nestingOverride, setNestingOverride] = useState(null);
+
+  // Sheet spec
+  const [sheetW, setSheetW] = useState(700);
+  const [sheetH, setSheetH] = useState(1000);
+  const [margin, setMargin] = useState(10);
+
+  // Calculated flat size
+  const [flatSpec, setFlatSpec] = useState(null);
+
+  // Layout
   const [algorithm, setAlgorithm] = useState("straight");
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(false);
@@ -55,7 +268,40 @@ export default function App() {
     return () => canvas.dispose();
   }, []);
 
+  // Fetch flat size whenever carton spec changes
+  useEffect(() => {
+    if (!length || !width || !height) return;
+    fetchFlatSize();
+  }, [boxStyle, length, width, height]);
+
+  const fetchFlatSize = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/carton/flat-size`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          style: boxStyle,
+          length, width, height
+        }),
+      });
+      const data = await response.json();
+      setFlatSpec(data);
+    } catch (err) {
+      console.error("Flat size error:", err);
+    }
+  };
+
+  const buildLayoutRequest = () => ({
+    style: boxStyle,
+    length, width, height,
+    nesting_pct_override: nestingOverride,
+    sheet_w: sheetW,
+    sheet_h: sheetH,
+    margin,
+  });
+
   const fetchLayout = useCallback(async () => {
+    if (!length || !width || !height || !sheetW || !sheetH) return;
     setLoading(true);
     setError(null);
     try {
@@ -63,25 +309,18 @@ export default function App() {
       const response = await fetch(`${API_BASE}${selected.endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          carton_w: cartonW,
-          carton_h: cartonH,
-          sheet_w: sheetW,
-          sheet_h: sheetH,
-          margin: margin,
-          nesting_pct: nestingPct,
-        }),
+        body: JSON.stringify(buildLayoutRequest()),
       });
       if (!response.ok) throw new Error("Backend error");
       const data = await response.json();
       setStats(data);
       renderLayout(data);
     } catch (err) {
-      setError("Could not connect to backend. Make sure it is running.");
+      setError("Could not connect to backend.");
     } finally {
       setLoading(false);
     }
-  }, [cartonW, cartonH, sheetW, sheetH, margin, nestingPct, algorithm]);
+  }, [boxStyle, length, width, height, sheetW, sheetH, margin, nestingOverride, algorithm]);
 
   useEffect(() => {
     fetchLayout();
@@ -92,14 +331,7 @@ export default function App() {
       const response = await fetch(`${API_BASE}/layout/compare`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          carton_w: cartonW,
-          carton_h: cartonH,
-          sheet_w: sheetW,
-          sheet_h: sheetH,
-          margin: margin,
-          nesting_pct: nestingPct,
-        }),
+        body: JSON.stringify(buildLayoutRequest()),
       });
       const data = await response.json();
       setComparison(data);
@@ -140,7 +372,7 @@ export default function App() {
       selectable: false, evented: false,
     }));
 
-    canvas.add(new fabric.Text(`${data.margin}" margin`, {
+    canvas.add(new fabric.Text(`${data.margin}mm margin`, {
       left: 4, top: 2, fontSize: 8, fill: "#c0392b",
       selectable: false, evented: false,
     }));
@@ -159,19 +391,19 @@ export default function App() {
 
     const rect = new fabric.Rect({
       left: 0, top: 0,
-      width: w - 2, height: h - 2,
+      width: w - 1, height: h - 1,
       fill, stroke, strokeWidth: 1, opacity: 0.85,
     });
 
     const arrow = new fabric.Text(carton.flipped ? "▼" : "▲", {
-      left: w / 2, top: h / 2 - 8,
-      fontSize: 10, fill: "white",
+      left: w / 2, top: h / 2 - 6,
+      fontSize: 8, fill: "white",
       originX: "center", originY: "center",
     });
 
-    const label = new fabric.Text(`${carton.w}×${carton.h}`, {
-      left: w / 2, top: h / 2 + 6,
-      fontSize: 7, fill: "white",
+    const label = new fabric.Text(`${Math.round(carton.w)}×${Math.round(carton.h)}`, {
+      left: w / 2, top: h / 2 + 5,
+      fontSize: 6, fill: "white",
       originX: "center", originY: "center",
     });
 
@@ -194,9 +426,7 @@ export default function App() {
     if (!stats.cartons || stats.cartons.length === 0) return;
     let dxf = `0\nSECTION\n2\nENTITIES\n`;
     dxf += rectDXF(0, 0, stats.sheet_w, stats.sheet_h);
-    stats.cartons.forEach(carton => {
-      dxf += rectDXF(carton.x, carton.y, carton.w, carton.h);
-    });
+    stats.cartons.forEach(c => { dxf += rectDXF(c.x, c.y, c.w, c.h); });
     dxf += `0\nENDSEC\n0\nEOF`;
     const blob = new Blob([dxf], { type: "application/dxf" });
     const a = document.createElement("a");
@@ -217,8 +447,10 @@ export default function App() {
     return "#e74c3c";
   };
 
-  const inputStyle = { width: 72, padding: "7px 8px", borderRadius: 6, border: "1px solid #ddd", fontSize: 14, marginTop: 4 };
+  const inputStyle = { width: "100%", padding: "7px 8px", borderRadius: 6, border: "1px solid #ddd", fontSize: 14, marginTop: 4, boxSizing: "border-box" };
   const labelStyle = { fontSize: 11, color: "#666", fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 };
+  const sectionStyle = { background: "white", borderRadius: 12, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" };
+  const sectionTitleStyle = { fontSize: 13, fontWeight: "800", color: BRAND, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 16, borderBottom: "2px solid " + BRAND_LIGHT, paddingBottom: 8 };
 
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif", background: "#f4f6f9", minHeight: "100vh" }}>
@@ -228,7 +460,7 @@ export default function App() {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 26, fontWeight: "900", color: "white", letterSpacing: -1 }}>Mono</span>
-            <span style={{ background: "rgba(255,255,255,0.15)", color: "white", fontSize: 10, padding: "2px 8px", borderRadius: 20, fontWeight: "600" }}>v1.1</span>
+            <span style={{ background: "rgba(255,255,255,0.15)", color: "white", fontSize: 10, padding: "2px 8px", borderRadius: 20, fontWeight: "600" }}>v2.0</span>
           </div>
           <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 4 }}>
             Monocarton Imposition Planner — maximise yield, minimise waste
@@ -245,11 +477,10 @@ export default function App() {
       {/* PROBLEM STATEMENT */}
       <div style={{ background: BRAND_LIGHT, borderBottom: "1px solid #d0dcea", padding: "14px 32px" }}>
         <p style={{ margin: 0, fontSize: 14, color: "#2c3e50", lineHeight: 1.6 }}>
-          <strong>What is Mono?</strong> Mono helps you calculate how many cartons fit on a print sheet and visualises the optimal layout — supporting Straight, Tumble, and four additional algorithms. Select an algorithm below to compare approaches.
+          <strong>What is Mono?</strong> Enter your 3D carton dimensions and sheet size — Mono automatically calculates the flat dieline size, optimal nesting saving, and best layout for maximum yield. All dimensions in millimetres.
         </p>
       </div>
 
-      {/* ERROR BANNER */}
       {error && (
         <div style={{ background: "#fdecea", border: "1px solid #e74c3c", padding: "10px 32px", fontSize: 13, color: "#c0392b" }}>
           ⚠️ {error}
@@ -259,67 +490,130 @@ export default function App() {
       <div style={{ padding: "24px 32px", display: "flex", gap: 24, flexWrap: "wrap" }}>
 
         {/* LEFT PANEL */}
-        <div style={{ flex: "0 0 320px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ flex: "0 0 340px", display: "flex", flexDirection: "column", gap: 16 }}>
 
-          {/* Carton Dimensions */}
-          <div style={{ background: "white", borderRadius: 12, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-            <div style={{ fontSize: 13, fontWeight: "800", color: BRAND, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 16, borderBottom: "2px solid " + BRAND_LIGHT, paddingBottom: 8 }}>
-              📦 Carton Dimensions
+          {/* Carton Specification */}
+          <div style={sectionStyle}>
+            <div style={sectionTitleStyle}>📦 Carton Specification</div>
+
+            {/* Box Style */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>Box Style <Tooltip text="The structural style of the carton determines flap dimensions" /></label>
+              <select value={boxStyle} onChange={e => setBoxStyle(e.target.value)} style={{ ...inputStyle, marginTop: 4 }}>
+                {BOX_STYLES.map(s => (
+                  <option key={s.id} value={s.id}>{s.label} — {s.desc}</option>
+                ))}
+              </select>
             </div>
-            <div style={{ display: "flex", gap: 16 }}>
+
+            {/* L W H inputs */}
+            <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
               {[
-                { label: "Width (in)", value: cartonW, set: setCartonW, tip: "Flat width of the carton including glue flaps" },
-                { label: "Height (in)", value: cartonH, set: setCartonH, tip: "Flat height of the carton including tuck flaps" },
+                { label: "Length L (mm)", value: length, set: setLength, tip: "Length of the folded box" },
+                { label: "Width W (mm)", value: width, set: setWidth, tip: "Width of the folded box" },
+                { label: "Height H (mm)", value: height, set: setHeight, tip: "Height of the folded box" },
               ].map(({ label, value, set, tip }) => (
                 <div key={label} style={{ flex: 1 }}>
                   <label style={labelStyle}>{label}<Tooltip text={tip} /></label>
-                  <input type="number" value={value} onChange={(e) => set(Number(e.target.value))} style={{ ...inputStyle, width: "100%" }} />
+                  <input type="number" value={value} onChange={e => set(Number(e.target.value))} style={inputStyle} />
                 </div>
               ))}
             </div>
+
+            {/* Calculated flat size */}
+            {flatSpec && (
+              <div style={{ background: "#f8f9fa", borderRadius: 8, padding: 12, marginBottom: 14, fontSize: 12 }}>
+                <div style={{ fontWeight: "700", color: BRAND, marginBottom: 8, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  ── Calculated Automatically ──
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                  {[
+                    { label: "Flat Width", value: `${flatSpec.flat_w} mm`, color: "#1565c0" },
+                    { label: "Flat Height", value: `${flatSpec.flat_h} mm`, color: "#1565c0" },
+                    { label: "Top Tuck Depth", value: `${flatSpec.top_tuck_depth} mm`, color: "#3b82f6" },
+                    { label: "Bottom Depth", value: `${flatSpec.bottom_tuck_depth} mm`, color: "#db2777" },
+                    { label: "Glue Flap", value: `${flatSpec.glue_flap} mm`, color: "#eab308" },
+                    { label: "Nesting Saving", value: `${flatSpec.nesting_saving_pct}%`, color: "#27ae60" },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} style={{ background: "white", borderRadius: 6, padding: "6px 8px", borderLeft: `3px solid ${color}` }}>
+                      <div style={{ fontSize: 10, color: "#888" }}>{label}</div>
+                      <div style={{ fontSize: 13, fontWeight: "700", color }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Nesting override */}
+                <div style={{ marginTop: 10 }}>
+                  <label style={{ ...labelStyle, fontSize: 10 }}>
+                    Override Nesting Saving % <Tooltip text="Leave blank to use calculated value. Override if your press achieves different results." />
+                  </label>
+                  <input
+                    type="number"
+                    placeholder={`Auto: ${flatSpec.nesting_saving_pct}%`}
+                    value={nestingOverride ?? ""}
+                    onChange={e => setNestingOverride(e.target.value ? Number(e.target.value) : null)}
+                    style={{ ...inputStyle, marginTop: 4, fontSize: 12 }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Flat Dieline */}
+            {flatSpec && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: "700", color: BRAND, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                  Flat Dieline
+                </div>
+                <div style={{ background: "#fafafa", border: "1px solid #eee", borderRadius: 8, padding: 8, overflowX: "auto" }}>
+                  <FlatDieline
+                    style={boxStyle}
+                    L={length} W={width} H={height}
+                    flatW={flatSpec.flat_w}
+                    flatH={flatSpec.flat_h}
+                    topTuck={flatSpec.top_tuck_depth}
+                    bottomTuck={flatSpec.bottom_tuck_depth}
+                    glueFlap={flatSpec.glue_flap}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 3D Preview */}
+            {length && width && height && (
+              <div>
+                <div style={{ fontSize: 11, fontWeight: "700", color: BRAND, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>
+                  3D Preview
+                </div>
+                <div style={{ background: "#fafafa", border: "1px solid #eee", borderRadius: 8, padding: 8 }}>
+                  <IsometricBox L={length} W={width} H={height} />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sheet Dimensions */}
-          <div style={{ background: "white", borderRadius: 12, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-            <div style={{ fontSize: 13, fontWeight: "800", color: BRAND, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 16, borderBottom: "2px solid " + BRAND_LIGHT, paddingBottom: 8 }}>
-              🗒️ Sheet Dimensions
-            </div>
-            <div style={{ display: "flex", gap: 16 }}>
+          <div style={sectionStyle}>
+            <div style={sectionTitleStyle}>🗒️ Sheet Dimensions</div>
+            <div style={{ display: "flex", gap: 10 }}>
               {[
-                { label: "Width (in)", value: sheetW, set: setSheetW, tip: "Full width of the print sheet" },
-                { label: "Height (in)", value: sheetH, set: setSheetH, tip: "Full height of the print sheet" },
+                { label: "Width (mm)", value: sheetW, set: setSheetW, tip: "Full width of the print sheet in mm" },
+                { label: "Height (mm)", value: sheetH, set: setSheetH, tip: "Full height of the print sheet in mm" },
               ].map(({ label, value, set, tip }) => (
                 <div key={label} style={{ flex: 1 }}>
                   <label style={labelStyle}>{label}<Tooltip text={tip} /></label>
-                  <input type="number" value={value} onChange={(e) => set(Number(e.target.value))} style={{ ...inputStyle, width: "100%" }} />
+                  <input type="number" value={value} onChange={e => set(Number(e.target.value))} style={inputStyle} />
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Press Constraints */}
-          <div style={{ background: "white", borderRadius: 12, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-            <div style={{ fontSize: 13, fontWeight: "800", color: BRAND, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 16, borderBottom: "2px solid " + BRAND_LIGHT, paddingBottom: 8 }}>
-              ⚙️ Press Constraints
-            </div>
-            <div style={{ display: "flex", gap: 16 }}>
-              {[
-                { label: "Border Margin (in)", value: margin, set: setMargin, tip: "Margin on all 4 sides" },
-                { label: "Nesting Saving %", value: nestingPct, set: setNestingPct, tip: "Vertical space saved per row pair in tumble layout" },
-              ].map(({ label, value, set, tip }) => (
-                <div key={label} style={{ flex: 1 }}>
-                  <label style={labelStyle}>{label}<Tooltip text={tip} /></label>
-                  <input type="number" value={value} onChange={(e) => set(Number(e.target.value))} style={{ ...inputStyle, width: "100%" }} />
-                </div>
-              ))}
+            <div style={{ marginTop: 10 }}>
+              <label style={labelStyle}>Border Margin (mm)<Tooltip text="Margin applied on all 4 sides" /></label>
+              <input type="number" value={margin} onChange={e => setMargin(Number(e.target.value))} style={inputStyle} />
             </div>
           </div>
 
           {/* Algorithm Selector */}
-          <div style={{ background: "white", borderRadius: 12, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-            <div style={{ fontSize: 13, fontWeight: "800", color: BRAND, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 16, borderBottom: "2px solid " + BRAND_LIGHT, paddingBottom: 8 }}>
-              🧮 Algorithm
-            </div>
+          <div style={sectionStyle}>
+            <div style={sectionTitleStyle}>🧮 Algorithm</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {ALGORITHMS.map(({ id, label, icon, desc, color }) => (
                 <button key={id} onClick={() => setAlgorithm(id)} style={{
@@ -328,21 +622,18 @@ export default function App() {
                   border: `2px solid ${algorithm === id ? color : "#eee"}`,
                   background: algorithm === id ? `${color}15` : "white",
                   textAlign: "left", width: "100%",
-                  transition: "all 0.15s",
                 }}>
-                  <span style={{ fontSize: 18, width: 32, textAlign: "center" }}>{icon}</span>
+                  <span style={{ fontSize: 16, width: 28, textAlign: "center" }}>{icon}</span>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: "700", color: algorithm === id ? color : "#333" }}>{label}</div>
-                    <div style={{ fontSize: 11, color: "#888", marginTop: 1 }}>{desc}</div>
+                    <div style={{ fontSize: 11, color: "#888" }}>{desc}</div>
                   </div>
                   {algorithm === id && (
-                    <span style={{ marginLeft: "auto", fontSize: 11, color, fontWeight: "700" }}>ACTIVE</span>
+                    <span style={{ marginLeft: "auto", fontSize: 10, color, fontWeight: "700" }}>ACTIVE</span>
                   )}
                 </button>
               ))}
             </div>
-
-            {/* Algorithm notes from backend */}
             {stats.algorithm_notes && (
               <div style={{ marginTop: 12, padding: "8px 12px", background: "#f8f9fa", borderRadius: 6, fontSize: 12, color: "#666", borderLeft: `3px solid ${ALGORITHMS.find(a => a.id === algorithm)?.color}` }}>
                 ℹ️ {stats.algorithm_notes}
@@ -353,15 +644,13 @@ export default function App() {
           {/* Tumble info */}
           {algorithm === "tumble" && stats.pair_height > 0 && (
             <div style={{ background: "#fff8e1", border: "1px solid #f9a825", borderRadius: 10, padding: 14, fontSize: 12, color: "#555", lineHeight: 1.6 }}>
-              <strong>How Tumble Works:</strong> Each ▲▼ pair takes <strong>{stats.pair_height}"</strong> instead of <strong>{(cartonH * 2).toFixed(1)}"</strong> — saving <strong>{stats.nesting_saving}"</strong> per pair.
+              <strong>Tumble Nesting:</strong> Each ▲▼ pair takes <strong>{stats.pair_height}mm</strong> instead of <strong>{(flatSpec?.flat_h * 2).toFixed(1)}mm</strong> — saving <strong>{stats.nesting_saving_mm}mm</strong> per pair.
             </div>
           )}
 
           {/* Export */}
-          <div style={{ background: "white", borderRadius: 12, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-            <div style={{ fontSize: 13, fontWeight: "800", color: BRAND, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12, borderBottom: "2px solid " + BRAND_LIGHT, paddingBottom: 8 }}>
-              ⬇️ Export & Tools
-            </div>
+          <div style={sectionStyle}>
+            <div style={sectionTitleStyle}>⬇️ Export & Tools</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <button onClick={exportSVG} style={{ padding: "9px 0", borderRadius: 7, border: "none", background: "#27ae60", color: "white", fontWeight: "700", cursor: "pointer", fontSize: 13 }}>
                 Export SVG — for Illustrator / Esko
@@ -392,14 +681,12 @@ export default function App() {
               sub={stats.utilization >= 80 ? "Excellent" : stats.utilization >= 60 ? "Moderate" : "Low"}
             />
             <StatCard label="Columns × Rows" value={stats.cartons_per_row ? `${stats.cartons_per_row} × ${stats.num_rows}` : "—"} color="#6a1b9a" sub="layout grid" />
-            {algorithm === "tumble" && stats.nesting_saving > 0 && (
-              <StatCard label="Nesting Saved" value={`${stats.nesting_saving}"`} color="#e67e22" sub="per row pair" />
-            )}
+            <StatCard label="Flat Size" value={flatSpec ? `${flatSpec.flat_w}×${flatSpec.flat_h}` : "—"} color="#16a085" sub="mm (W × H)" />
           </div>
 
           {/* Comparison Table */}
           {comparison && (
-            <div style={{ background: "white", borderRadius: 12, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.08)", marginBottom: 20 }}>
+            <div style={{ ...sectionStyle, marginBottom: 20 }}>
               <div style={{ fontSize: 13, fontWeight: "800", color: BRAND, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>⚖️ Algorithm Comparison</span>
                 <span style={{ fontSize: 11, color: "#27ae60", fontWeight: "700" }}>
@@ -427,12 +714,8 @@ export default function App() {
                       <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: "700", color: idx === 0 ? "#27ae60" : "#333" }}>
                         {row.total_cartons}
                       </td>
-                      <td style={{ padding: "8px 12px", textAlign: "center" }}>
-                        {row.utilization}%
-                      </td>
-                      <td style={{ padding: "8px 12px", fontSize: 11, color: "#888" }}>
-                        {row.notes}
-                      </td>
+                      <td style={{ padding: "8px 12px", textAlign: "center" }}>{row.utilization}%</td>
+                      <td style={{ padding: "8px 12px", fontSize: 11, color: "#888" }}>{row.notes}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -444,15 +727,14 @@ export default function App() {
           )}
 
           {/* Canvas */}
-          <div style={{ background: "white", borderRadius: 12, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+          <div style={sectionStyle}>
             <div style={{ fontSize: 13, fontWeight: "800", color: BRAND, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span>🖼️ Layout Preview</span>
               <span style={{ fontSize: 11, color: loading ? "#f39c12" : "#aaa", fontWeight: "400", textTransform: "none" }}>
-                {loading ? "⏳ Fetching from backend..." : "Drag cartons to adjust manually"}
+                {loading ? "⏳ Calculating..." : "Drag cartons to adjust manually"}
               </span>
             </div>
 
-            {/* Legend */}
             <div style={{ display: "flex", gap: 16, marginBottom: 12, fontSize: 12, color: "#555", flexWrap: "wrap" }}>
               <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <span style={{ width: 14, height: 14, background: STRAIGHT_COLOR, borderRadius: 3, display: "inline-block" }} /> Normal (▲)
@@ -479,7 +761,7 @@ export default function App() {
 
       {/* FOOTER */}
       <div style={{ borderTop: "1px solid #e0e0e0", padding: "14px 32px", background: "white", display: "flex", justifyContent: "space-between", fontSize: 12, color: "#aaa" }}>
-        <span><strong style={{ color: BRAND }}>Mono</strong> v1.1 — Monocarton Imposition Planner</span>
+        <span><strong style={{ color: BRAND }}>Mono</strong> v2.0 — Monocarton Imposition Planner</span>
         <span>Built by Deepak · Powered by FastAPI + Fabric.js</span>
       </div>
     </div>
