@@ -1,70 +1,81 @@
-# Getting Started with Create React App
+cat > /Users/deepakverma/Documents/monocarton-editor/README.md << 'EOF'
+# Mono — Monocarton Imposition Planner
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full stack web tool for packaging professionals to calculate and visualise optimal carton layouts on print sheets.
 
-## Available Scripts
+Live: https://deepakstratos-tech.github.io/monocarton-editor
 
-In the project directory, you can run:
+## What it does
+Mono helps you calculate how many cartons fit on a print sheet and visualises the optimal layout — supporting both Straight and Tumble imposition. Layout calculations happen server-side via the Mono Backend API.
 
-### `npm start`
+## Tech Stack
+- React
+- Fabric.js — interactive canvas rendering
+- Hosted on GitHub Pages
+- Backend: FastAPI on Railway
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Features
+- Straight layout — all cartons same direction
+- Tumble layout — alternate rows flipped 180° with nesting saving
+- Interactive canvas — drag cartons to adjust manually
+- SVG export — for Illustrator and Esko
+- DXF export — for ArtiosCAD and AutoCAD
+- Live backend status indicator
+- All calculations performed server-side
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Local Setup
 
-### `npm test`
+### Prerequisites
+- Node.js 18+
+- NVM recommended
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Install and run
+```bash
+nvm use 18
+npm install
+npm start
+```
 
-### `npm run build`
+App will open at `http://localhost:3000`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Connect to backend
+In `App.js`, set:
+```javascript
+const API_BASE = "http://127.0.0.1:8000"; // local
+// or
+const API_BASE = "https://web-production-e59f.up.railway.app"; // production
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Deployment
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Deploy to GitHub Pages
+```bash
+npm run deploy
+```
 
-### `npm run eject`
+Make sure `homepage` in `package.json` is set to:
+```
+https://deepakstratos-tech.github.io/monocarton-editor
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Start Everything Locally
+From the Documents folder:
+```bash
+./start.sh
+```
+This opens two terminal windows — one for the backend and one for the frontend.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Domain Knowledge
+- Carton flat size includes glue flaps, tuck flaps, and bleed
+- Tumble layout flips alternate rows 180° so profiles nest into each other
+- Nesting saving percentage depends on physical carton profile
+- Border margin applied on all 4 sides
+- Press constraints include gripper and side lay allowances
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Changelog
+- v1.1 — Backend moved to Railway, Tier 2 algorithms added
+- v1.0 — Initial release with Straight and Tumble layout
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Built by
+Deepak — powered by FastAPI + Fabric.js
+EOF
