@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { fabric } from "fabric";
+import UserGuide from "./UserGuide";
 
 const SCALE = 0.5; // 1mm = 0.5px
 const BRAND = "#1a4a7a";
@@ -156,60 +157,56 @@ const FlatDieline = ({ style, L, W, H, flatW, flatH, topTuck, bottomTuck, glueFl
 const IsometricBox = ({ L, W, H }) => {
   if (!L || !W || !H) return null;
 
-  const scale = 0.5;
+  // Dynamic scale based on box size
+  // Target max dimension of about 150px
+  const maxDim = Math.max(L, W, H);
+  const scale = Math.min(150 / maxDim, 1.2);
+
   const l = L * scale;
   const w = W * scale;
   const h = H * scale;
 
-  // Isometric angles
-  const cos30 = Math.cos(Math.PI / 6); // 0.866
-  const sin30 = Math.sin(Math.PI / 6); // 0.5
+  const cos30 = Math.cos(Math.PI / 6);
+  const sin30 = Math.sin(Math.PI / 6);
 
-  // Canvas padding
-  const padX = 30;
-  const padY = 20;
+  const padX = 50;
+  const padY = 30;
 
-  // Origin point (bottom left front corner)
   const ox = padX + w * cos30;
   const oy = padY + h + l * sin30 + w * sin30;
 
-  // Helper — convert 3D isometric coords to 2D screen coords
   const iso = (x, y, z) => ({
     sx: ox + (x - y) * cos30,
     sy: oy - z - (x + y) * sin30,
   });
 
-  // Define the 8 corners of the box
-  // x = along Length, y = along Width, z = along Height
-  const p = (x, y, z) => iso(x, y, z);
-
-  const A = p(0, 0, 0);  // front bottom left
-  const B = p(l, 0, 0);  // front bottom right
-  const C = p(l, w, 0);  // back bottom right
-  const D = p(0, w, 0);  // back bottom left
-  const E = p(0, 0, h);  // front top left
-  const F = p(l, 0, h);  // front top right
-  const G = p(l, w, h);  // back top right
-  const HH = p(0, w, h); // back top left
+  const A = iso(0, 0, 0);
+  const B = iso(l, 0, 0);
+  const C = iso(l, w, 0);
+  const D = iso(0, w, 0);
+  const E = iso(0, 0, h);
+  const F = iso(l, 0, h);
+  const G = iso(l, w, h);
+  const HH = iso(0, w, h);
 
   const pt = (p) => `${p.sx},${p.sy}`;
   const face = (pts) => pts.map(pt).join(" ");
 
-  const svgW = l * cos30 + w * cos30 + padX * 2 + 20;
-  const svgH = h + l * sin30 + w * sin30 + padY * 2 + 20;
+  const svgW = l * cos30 + w * cos30 + padX * 2 + 30;
+  const svgH = h + l * sin30 + w * sin30 + padY * 2 + 40;
 
   return (
     <svg width={svgW} height={svgH} style={{ display: "block", margin: "0 auto" }}>
 
-      {/* Bottom face (optional, subtle) */}
+      {/* Bottom face */}
       <polygon points={face([A, B, C, D])}
         fill="#e0d7f7" stroke="#7c3aed" strokeWidth="0.5" opacity="0.4" />
 
-      {/* Left face (front-left) */}
+      {/* Front face */}
       <polygon points={face([A, B, F, E])}
         fill="#ede9fe" stroke="#7c3aed" strokeWidth="1.5" />
 
-      {/* Right face (front-right) */}
+      {/* Right face */}
       <polygon points={face([B, C, G, F])}
         fill="#ddd6fe" stroke="#7c3aed" strokeWidth="1.5" />
 
@@ -217,36 +214,38 @@ const IsometricBox = ({ L, W, H }) => {
       <polygon points={face([E, F, G, HH])}
         fill="#f5f3ff" stroke="#7c3aed" strokeWidth="1.5" />
 
-      {/* Edge lines for crispness */}
+      {/* Edge lines */}
       <line x1={A.sx} y1={A.sy} x2={E.sx} y2={E.sy} stroke="#7c3aed" strokeWidth="1" />
       <line x1={B.sx} y1={B.sy} x2={F.sx} y2={F.sy} stroke="#7c3aed" strokeWidth="1" />
       <line x1={C.sx} y1={C.sy} x2={G.sx} y2={G.sy} stroke="#7c3aed" strokeWidth="1.5" />
 
-      {/* L dimension label — along bottom front edge */}
+      {/* L label — below front bottom edge, centered */}
       <text
         x={(A.sx + B.sx) / 2}
-        y={(A.sy + B.sy) / 2 + 12}
-        textAnchor="middle" fontSize="9"
+        y={svgH - 26}
+        textAnchor="middle" fontSize="10"
         fill="#7c3aed" fontWeight="bold">
-        L:{L}mm
+        L: {L}mm
       </text>
 
-      {/* W dimension label — along bottom right edge */}
+      {/* W label — below right bottom edge */}
       <text
-        x={(B.sx + C.sx) / 2 + 10}
-        y={(B.sy + C.sy) / 2 + 10}
-        textAnchor="middle" fontSize="9"
-        fill="#7c3aed" fontWeight="bold">
-        W:{W}mm
+        x={(B.sx + C.sx) / 2 + 14}
+        y={svgH - 12}
+        textAnchor="middle" fontSize="10"
+        fill="#5b21b6" fontWeight="bold">
+        W: {W}mm
       </text>
 
-      {/* H dimension label — along left vertical edge */}
+      {/* H label — left of vertical edge */}
       <text
-        x={A.sx - 16}
+        x={A.sx - 30}
         y={(A.sy + E.sy) / 2}
-        textAnchor="middle" fontSize="9"
-        fill="#7c3aed" fontWeight="bold">
-        H:{H}mm
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize="10"
+        fill="#4c1d95" fontWeight="bold">
+        H: {H}mm
       </text>
     </svg>
   );
@@ -277,6 +276,8 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [comparison, setComparison] = useState(null);
+
+  const [guideOpen, setGuideOpen] = useState(false);
 
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {
@@ -395,6 +396,22 @@ export default function App() {
       left: 4, top: 2, fontSize: 8, fill: "#c0392b",
       selectable: false, evented: false,
     }));
+    // Remainder space info
+    const remainderW = data.usable_w - (data.cartons_per_row * data.flat_w);
+    const remainderH = data.usable_h - (data.num_rows * data.flat_h);
+    canvas.add(new fabric.Text(
+      `Remainder: ${remainderW.toFixed(1)}mm W × ${remainderH.toFixed(1)}mm H`,
+      {
+        left: data.sheet_w * SCALE - 4,
+        top: data.sheet_h * SCALE - 14,
+        fontSize: 8,
+        fill: "#888",
+        textAlign: "right",
+        originX: "right",
+        selectable: false,
+        evented: false,
+      }
+    ));
 
     data.cartons.forEach(carton => drawCarton(canvas, carton));
     canvas.renderAll();
@@ -485,14 +502,30 @@ export default function App() {
             Monocarton Imposition Planner — maximise yield, minimise waste
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 10, height: 10, borderRadius: "50%", background: error ? "#e74c3c" : loading ? "#f39c12" : "#27ae60" }} />
-          <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
-            {error ? "Backend offline" : loading ? "Calculating..." : "Backend connected"}
-          </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button
+            onClick={() => setGuideOpen(true)}
+            style={{
+              background: "rgba(255,255,255,0.15)",
+              border: "1px solid rgba(255,255,255,0.3)",
+              color: "white",
+              padding: "6px 16px",
+              borderRadius: 20,
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: "600",
+            }}>
+            📖 User Guide
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: error ? "#e74c3c" : loading ? "#f39c12" : "#27ae60" }} />
+            <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
+              {error ? "Backend offline" : loading ? "Calculating..." : "Backend connected"}
+            </span>
+          </div>
         </div>
       </div>
-
+      
       {/* PROBLEM STATEMENT */}
       <div style={{ background: BRAND_LIGHT, borderBottom: "1px solid #d0dcea", padding: "14px 32px" }}>
         <p style={{ margin: 0, fontSize: 14, color: "#2c3e50", lineHeight: 1.6 }}>
@@ -783,6 +816,8 @@ export default function App() {
         <span><strong style={{ color: BRAND }}>Mono</strong> v2.0 — Monocarton Imposition Planner</span>
         <span>Built by Deepak · Powered by FastAPI + Fabric.js</span>
       </div>
+
+      <UserGuide open={guideOpen} onClose={() => setGuideOpen(false)} />
     </div>
   );
 }
