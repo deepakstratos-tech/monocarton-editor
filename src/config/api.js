@@ -21,3 +21,33 @@ export const BRAND_LIGHT = "#e8f0f7";
 export const STRAIGHT_COLOR = "#4F86C6";
 export const TUMBLE_FLIPPED = "#e67e22";
 export const SCALE = 0.5; // 1mm = 0.5px
+export const PAPER_TYPES = [
+  { id: "FBB", label: "FBB", desc: "Folding Box Board" },
+  { id: "SBS", label: "SBS", desc: "Solid Bleached Sulphate" },
+  { id: "ITC_SAFIRE", label: "ITC Safire", desc: "ITC Safire Graphic Board" },
+  { id: "ART_CARD", label: "Art Card", desc: "Art Card" },
+  { id: "DUPLEX", label: "Duplex", desc: "Duplex Board" },
+];
+
+export const LAMINATION_TYPES = [
+  { id: "NONE", label: "None" },
+  { id: "GLOSS", label: "Gloss" },
+  { id: "MATT", label: "Matt" },
+  { id: "SOFT_TOUCH", label: "Soft Touch" },
+  { id: "UV", label: "UV Varnish" },
+  { id: "ANTI_SCRATCH", label: "Anti Scratch" },
+];
+
+export const COLOUR_TYPES = [
+  { id: "CMYK", label: "CMYK" },
+  { id: "CMYK_1P", label: "CMYK + 1 Pantone" },
+  { id: "CMYK_2P", label: "CMYK + 2 Pantone" },
+  { id: "CMYK_3P", label: "CMYK + 3 Pantone" },
+];
+
+export const STAMPING_TYPES = [
+  { id: "NONE", label: "None" },
+  { id: "FOIL", label: "Foil Stamping" },
+  { id: "EMBOSS", label: "Embossing" },
+  { id: "FOIL_EMBOSS", label: "Foil + Emboss" },
+];
