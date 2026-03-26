@@ -6,6 +6,7 @@ import {
 } from "../../config/api";
 import SectionPanel from "../../components/SectionPanel";
 import Tooltip from "../../components/Tooltip";
+import PDFExtract from "../extract/PDFExtract";
 
 const inputStyle = {
   width: "100%", padding: "7px 8px", borderRadius: 6,
@@ -155,6 +156,31 @@ const JobsPage = ({ jobs, setJobs }) => {
                 ⚠️ {error}
               </div>
             )}
+
+            {/* PDF Extract */}
+            <PDFExtract onExtracted={({ style, length, width, height, product_name }) => {
+              handleChange("style", style);
+              handleChange("length", length);
+              handleChange("width", width);
+              handleChange("height", height);
+              if (product_name) handleChange("product_name", product_name);
+            }} />
+
+            {/* Divider */}
+            <div style={{
+              borderTop: "1px solid #eee",
+              margin: "16px 0",
+              position: "relative",
+            }}>
+              <span style={{
+                position: "absolute", top: -9, left: "50%",
+                transform: "translateX(-50%)",
+                background: "white", padding: "0 8px",
+                fontSize: 11, color: "#aaa",
+              }}>
+                or enter manually
+              </span>
+            </div>
 
             {/* Client + Product */}
             <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>

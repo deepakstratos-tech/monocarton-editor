@@ -13,6 +13,9 @@ const UserGuide = ({ open, onClose }) => {
     { id: "tumble", label: "🔄 Tumble Layout" },
     { id: "export", label: "⬇️ Exporting Files" },
     { id: "glossary", label: "📖 Glossary" },
+    { id: "jobs", label: "📋 Job Management" },
+    { id: "planner", label: "🗓️ Imposition Planner" },
+    { id: "pdfextract", label: "📄 PDF Extraction" },
   ];
 
   const content = {
@@ -288,6 +291,183 @@ const UserGuide = ({ open, onClose }) => {
       </div>
     ),
 
+    jobs: (
+      <div>
+        <h2 style={{ color: "#1a4a7a", marginTop: 0 }}>Job Management</h2>
+        <p>The Jobs page allows you to add multiple carton jobs from different clients. Each job carries its own specifications — dimensions, paper type, GSM, lamination, and more. Compatible jobs can then be imposed together on a single sheet to maximise efficiency.</p>
+
+        <h3 style={{ color: "#1a4a7a" }}>How to Add a Job</h3>
+        {[
+          { step: "1", title: "Select Box Style", color: "#1565c0", content: "Choose the structural style of the carton — Bottom Side Lock, Straight Tuck End, Reverse Tuck End, or Lock Bottom." },
+          { step: "2", title: "Enter Dimensions", color: "#6a1b9a", content: "Enter Length, Width and Height in millimetres. These are the 3D dimensions of the finished folded box." },
+          { step: "3", title: "Enter Quantity", color: "#27ae60", content: "Enter the total number of units required. This is used to calculate impressions needed and overrun percentage." },
+          { step: "4", title: "Set Print Specifications", color: "#e67e22", content: "Select Paper Type, GSM, Lamination, Colours and Stamping. These are used by the compatibility checker to determine which jobs can be combined." },
+          { step: "5", title: "Click Add Job", color: "#c0392b", content: "The backend automatically calculates the flat dieline size. The job appears in the list on the right." },
+        ].map(({ step, title, color, content }) => (
+          <div key={step} style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+            <div style={{ width: 28, height: 28, borderRadius: "50%", background: color, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: 13, flexShrink: 0 }}>
+              {step}
+            </div>
+            <div>
+              <div style={{ fontWeight: "700", color, marginBottom: 4 }}>{title}</div>
+              <div style={{ fontSize: 13, color: "#555", lineHeight: 1.6 }}>{content}</div>
+            </div>
+          </div>
+        ))}
+
+        <h3 style={{ color: "#1a4a7a" }}>Print Specifications Explained</h3>
+        {[
+          { label: "Paper Type", color: "#1565c0", desc: "The board substrate. FBB (Folding Box Board) is most common for pharmaceutical cartons. Jobs must share the same paper type to be combined." },
+          { label: "GSM", color: "#6a1b9a", desc: "Grams per Square Metre — the weight of the board. Jobs within ±10 GSM of each other can be combined (configurable in the Planner)." },
+          { label: "Lamination", color: "#27ae60", desc: "The surface finish applied after printing. Gloss, Matt, Soft Touch, UV Varnish, or None. Jobs must share the same lamination to be combined." },
+          { label: "Colours", color: "#e67e22", desc: "The colour specification — CMYK only, or CMYK with Pantone inks. A soft warning is shown if combined jobs have different colour specs." },
+          { label: "Stamping", color: "#c0392b", desc: "Special finishing such as Hot Foil Stamping or Embossing. A soft warning is shown if combined jobs have different stamping requirements." },
+        ].map(({ label, color, desc }) => (
+          <div key={label} style={{ borderLeft: `3px solid ${color}`, paddingLeft: 12, marginBottom: 12 }}>
+            <div style={{ fontWeight: "700", color, fontSize: 13 }}>{label}</div>
+            <div style={{ fontSize: 12, color: "#555", lineHeight: 1.5, marginTop: 2 }}>{desc}</div>
+          </div>
+        ))}
+
+        <h3 style={{ color: "#1a4a7a" }}>Managing Jobs</h3>
+        <p style={{ fontSize: 13, color: "#555", lineHeight: 1.6 }}>
+          Each job in the list shows its dimensions, flat size, quantity, paper type, GSM and lamination at a glance.
+          Use the <strong>Edit</strong> button to modify a job and <strong>Remove</strong> to delete it.
+          Once you have at least 2 jobs, the <strong>Plan Imposition</strong> button appears to take you to the Planner.
+        </p>
+      </div>
+    ),
+
+    planner: (
+      <div>
+        <h2 style={{ color: "#1a4a7a", marginTop: 0 }}>Imposition Planner</h2>
+        <p>The Planner is where multiple jobs come together on a single sheet. It has three steps — Compatibility Check, Impression Alignment Analysis, and Multi-SKU Layout.</p>
+
+        <h3 style={{ color: "#1a4a7a" }}>Step 1 — Check Compatibility</h3>
+        <p style={{ fontSize: 13, color: "#555", lineHeight: 1.6 }}>
+          Click <strong>Check Compatibility</strong> to verify which jobs can be combined on the same sheet.
+          The checker applies three hard constraints:
+        </p>
+        <div style={{ background: "#fdecea", border: "1px solid #e74c3c", borderRadius: 8, padding: 12, marginBottom: 12 }}>
+          <div style={{ fontWeight: "700", color: "#e74c3c", marginBottom: 6, fontSize: 13 }}>🚫 Hard Constraints — must match to combine</div>
+          {[
+            "Paper Type — must be identical",
+            "GSM — must be within tolerance (default ±10 GSM)",
+            "Lamination — must be identical",
+          ].map(c => <div key={c} style={{ fontSize: 12, color: "#555", padding: "2px 0" }}>• {c}</div>)}
+        </div>
+        <div style={{ background: "#fff8e1", border: "1px solid #f9a825", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+          <div style={{ fontWeight: "700", color: "#f39c12", marginBottom: 6, fontSize: 13 }}>⚠️ Soft Warnings — will warn but not block</div>
+          {[
+            "Colours — different Pantone counts",
+            "Stamping — different finishing requirements",
+          ].map(c => <div key={c} style={{ fontSize: 12, color: "#555", padding: "2px 0" }}>• {c}</div>)}
+        </div>
+
+        <h3 style={{ color: "#1a4a7a" }}>Step 2 — Impression Alignment</h3>
+        <p style={{ fontSize: 13, color: "#555", lineHeight: 1.6 }}>
+          This is the most important step for colour consistency. In offset printing, every press run produces a slightly different colour result. If two jobs finish at different impressions, the second job will have a colour variation.
+        </p>
+        <div style={{ background: "#e8f0f7", borderRadius: 8, padding: 12, marginBottom: 12 }}>
+          <div style={{ fontWeight: "700", color: "#1a4a7a", marginBottom: 6, fontSize: 13 }}>How Alignment Score Works</div>
+          <div style={{ fontSize: 12, color: "#555", lineHeight: 1.6 }}>
+            Mono calculates how many cartons of each job fit on the sheet and finds the combination where all jobs complete in the same number of impressions. A score of <strong>100%</strong> means perfect alignment — all jobs finish together in one press run, guaranteeing colour consistency.
+          </div>
+        </div>
+        <div style={{ fontFamily: "monospace", background: "#f8f9fa", borderRadius: 8, padding: 12, fontSize: 12, lineHeight: 2, marginBottom: 16 }}>
+          <div>Example — 5000 units each, 700×1000mm sheet:</div>
+          <div>Job A: 6 cartons/sheet → 834 impressions</div>
+          <div>Job B: 3 cartons/sheet → 1667 impressions ← misaligned ❌</div>
+          <div style={{ marginTop: 8 }}>Better layout:</div>
+          <div>Job A: 5 cartons/sheet → 1000 impressions</div>
+          <div>Job B: 3 cartons/sheet → 1000 impressions ← aligned ✅</div>
+        </div>
+
+        <h3 style={{ color: "#1a4a7a" }}>Step 3 — Multi-SKU Layout</h3>
+        <p style={{ fontSize: 13, color: "#555", lineHeight: 1.6 }}>
+          Click <strong>Run Multi-SKU Layout</strong> to generate the full imposition. The canvas shows all jobs colour-coded — each job has its own colour so you can immediately see how the sheet is divided. The per-job summary table shows cartons per sheet, impressions needed, actual printed quantity, and overrun percentage for each job.
+        </p>
+
+        <h3 style={{ color: "#1a4a7a" }}>Overrun</h3>
+        <p style={{ fontSize: 13, color: "#555", lineHeight: 1.6 }}>
+          Overrun is the difference between the quantity required and the actual quantity printed. Since you always print in complete impressions, some overrun is inevitable. The default tolerance is 5% — jobs exceeding this show a warning. Overrun means extra units that become waste or stock.
+        </p>
+        <div style={{ fontFamily: "monospace", background: "#f8f9fa", borderRadius: 8, padding: 12, fontSize: 12, lineHeight: 2 }}>
+          <div>Quantity required: 5000</div>
+          <div>Cartons per sheet: 6</div>
+          <div>Impressions: ceil(5000/6) = 834</div>
+          <div>Actual printed: 834 × 6 = 5004</div>
+          <div>Overrun: (5004-5000)/5000 = 0.08% ← acceptable ✅</div>
+        </div>
+      </div>
+    ),
+
+    pdfextract: (
+      <div>
+        <h2 style={{ color: "#1a4a7a", marginTop: 0 }}>PDF Extraction</h2>
+        <p>Mono can automatically extract carton dimensions from PDF artwork files. This saves time when working with standard artwork files from clients or print houses.</p>
+
+        <h3 style={{ color: "#1a4a7a" }}>How to Use</h3>
+        {[
+          { step: "1", title: "Open Layout or Jobs page", color: "#1565c0", content: "The PDF extraction tool is available in the Carton Specification panel on the Layout page, and in the Add Job form on the Jobs page." },
+          { step: "2", title: "Upload PDF", color: "#6a1b9a", content: "Drag and drop a PDF artwork file or click to browse. Supports standard pharmaceutical artwork formats including Makin Laboratories artwork files." },
+          { step: "3", title: "Click Extract", color: "#27ae60", content: "Mono sends the PDF to the backend which tries multiple extraction methods to find the carton dimensions." },
+          { step: "4", title: "Review result", color: "#e67e22", content: "If dimensions are found, they are shown with a confidence rating. Review the extracted text to verify accuracy." },
+          { step: "5", title: "Click Use These Dimensions", color: "#c0392b", content: "The extracted dimensions are automatically populated into the carton specification form. You can then adjust any values if needed." },
+        ].map(({ step, title, color, content }) => (
+          <div key={step} style={{ display: "flex", gap: 16, marginBottom: 14 }}>
+            <div style={{ width: 28, height: 28, borderRadius: "50%", background: color, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: 13, flexShrink: 0 }}>
+              {step}
+            </div>
+            <div>
+              <div style={{ fontWeight: "700", color, marginBottom: 4 }}>{title}</div>
+              <div style={{ fontSize: 13, color: "#555", lineHeight: 1.6 }}>{content}</div>
+            </div>
+          </div>
+        ))}
+
+        <h3 style={{ color: "#1a4a7a" }}>Extraction Methods</h3>
+        {[
+          { label: "📝 Text Extraction", color: "#27ae60", desc: "For PDFs with selectable text. Fast and accurate. Uses pdfplumber and pymupdf to extract text from the PDF directly." },
+          { label: "🔍 OCR", color: "#f39c12", desc: "For image-based PDFs where the content is embedded as an image. Slower but handles scanned and image-only artwork files. Always verify OCR results before using." },
+        ].map(({ label, color, desc }) => (
+          <div key={label} style={{ background: "white", borderLeft: `3px solid ${color}`, borderRadius: 8, padding: 12, marginBottom: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div style={{ fontWeight: "700", color, fontSize: 13, marginBottom: 4 }}>{label}</div>
+            <div style={{ fontSize: 12, color: "#555", lineHeight: 1.5 }}>{desc}</div>
+          </div>
+        ))}
+
+        <h3 style={{ color: "#1a4a7a" }}>Confidence Levels</h3>
+        {[
+          { label: "High", color: "#27ae60", desc: "Dimension pattern found in a labelled field like Dimension/Foil Width or Outer Size. Very reliable." },
+          { label: "Medium", color: "#f39c12", desc: "Dimension pattern found but in a less specific context. Verify before using." },
+          { label: "Low", color: "#e74c3c", desc: "Pattern found but uncertain. Always verify manually." },
+        ].map(({ label, color, desc }) => (
+          <div key={label} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start" }}>
+            <div style={{ background: color, color: "white", borderRadius: 4, padding: "2px 8px", fontSize: 11, fontWeight: "700", flexShrink: 0 }}>{label}</div>
+            <div style={{ fontSize: 12, color: "#555", lineHeight: 1.5 }}>{desc}</div>
+          </div>
+        ))}
+
+        <h3 style={{ color: "#1a4a7a" }}>Supported Formats</h3>
+        <p style={{ fontSize: 13, color: "#555", lineHeight: 1.6 }}>
+          The extractor looks for these dimension formats in artwork files:
+        </p>
+        <div style={{ fontFamily: "monospace", background: "#f8f9fa", borderRadius: 8, padding: 12, fontSize: 12, lineHeight: 2 }}>
+          <div>L 45 x W 45 x H 83 mm</div>
+          <div>L- 45 x W- 45 x H- 83</div>
+          <div>45 (L) x 45 (W) x 83 (H) mm</div>
+          <div>Outer Size : 45 (L) x 45 (W) x 83 (H) mm</div>
+          <div>Dimension/Foil Width L 45 x W 45 x H 83</div>
+          <div>45 x 45 x 83 mm</div>
+        </div>
+
+        <div style={{ background: "#fff8e1", border: "1px solid #f9a825", borderRadius: 8, padding: 12, marginTop: 16, fontSize: 13, color: "#555" }}>
+          ⚠️ <strong>Always verify extracted dimensions</strong> against your actual artwork before using for production planning. Mono's extraction is a time-saving tool — not a replacement for manual verification.
+        </div>
+      </div>
+    ),
+
     glossary: (
       <div>
         <h2 style={{ color: "#1a4a7a", marginTop: 0 }}>Glossary</h2>
@@ -310,6 +490,12 @@ const UserGuide = ({ open, onClose }) => {
           { term: "DXF", def: "Drawing Exchange Format — a CAD file format used by ArtiosCAD, AutoCAD, and other design tools for carton dielines." },
           { term: "SVG", def: "Scalable Vector Graphics — an open format for vector artwork, supported by Illustrator, Esko, and most design tools." },
           { term: "Pair Height", def: "In tumble layout, the vertical space taken up by one ▲▼ pair of rows. Equal to 2 × Flat Height minus the nesting saving." },
+          { term: "Gang Printing", def: "Imposing multiple different jobs on a single sheet to maximise sheet utilisation and reduce cost per unit." },
+          { term: "Impression Alignment", def: "Arranging carton counts per job so that all jobs complete in the same number of press impressions — guaranteeing colour consistency across all jobs." },
+          { term: "Overrun", def: "The extra units printed beyond the required quantity due to rounding up to complete impressions. Typically 0-5% is acceptable." },
+          { term: "Compatibility", def: "Whether two or more jobs can be combined on the same sheet — determined by matching paper type, GSM tolerance, and lamination." },
+          { term: "Multi-SKU Layout", def: "An imposition layout containing multiple different carton designs (SKUs) on a single sheet." },
+          { term: "OCR", def: "Optical Character Recognition — technology that reads text from images. Used by Mono to extract dimensions from image-based PDF artwork files." },
         ].map(({ term, def }) => (
           <div key={term} style={{ borderBottom: "1px solid #f0f0f0", padding: "10px 0" }}>
             <div style={{ fontWeight: "700", color: "#1a4a7a", fontSize: 13 }}>{term}</div>

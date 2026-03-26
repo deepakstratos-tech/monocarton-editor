@@ -4,6 +4,7 @@ import Tooltip from "../../components/Tooltip";
 import SectionPanel from "../../components/SectionPanel";
 import FlatDieline from "./FlatDieline";
 import IsometricBox from "./IsometricBox";
+import PDFExtract from "../extract/PDFExtract";
 
 const inputStyle = { width: "100%", padding: "7px 8px", borderRadius: 6, border: "1px solid #ddd", fontSize: 14, marginTop: 4, boxSizing: "border-box" };
 const labelStyle = { fontSize: 11, color: "#666", fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 };
@@ -18,6 +19,30 @@ const CartonSpec = ({
 }) => {
   return (
     <SectionPanel title="📦 Carton Specification">
+      {/* PDF Extract */}
+      <PDFExtract onExtracted={({ style, length, width, height, product_name }) => {
+        setBoxStyle(style);
+        setLength(length);
+        setWidth(width);
+        setHeight(height);
+      }} />
+
+      {/* Divider */}
+      <div style={{
+        borderTop: "1px solid #eee",
+        margin: "16px 0",
+        position: "relative",
+      }}>
+        <span style={{
+          position: "absolute", top: -9, left: "50%",
+          transform: "translateX(-50%)",
+          background: "white", padding: "0 8px",
+          fontSize: 11, color: "#aaa",
+        }}>
+          or enter manually
+        </span>
+      </div>
+
       {/* Box Style */}
       <div style={{ marginBottom: 14 }}>
         <label style={labelStyle}>Box Style <Tooltip text="The structural style determines flap dimensions" /></label>
