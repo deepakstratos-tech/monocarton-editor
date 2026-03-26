@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/monocarton-editor/static/css/main.e6c13ad2.css",
-    "main.js": "/monocarton-editor/static/js/main.4c8d46a0.js",
+    "main.js": "/monocarton-editor/static/js/main.c69810a6.js",
     "static/js/453.858db5f3.chunk.js": "/monocarton-editor/static/js/453.858db5f3.chunk.js",
     "index.html": "/monocarton-editor/index.html",
     "main.e6c13ad2.css.map": "/monocarton-editor/static/css/main.e6c13ad2.css.map",
-    "main.4c8d46a0.js.map": "/monocarton-editor/static/js/main.4c8d46a0.js.map",
+    "main.c69810a6.js.map": "/monocarton-editor/static/js/main.c69810a6.js.map",
     "453.858db5f3.chunk.js.map": "/monocarton-editor/static/js/453.858db5f3.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.4c8d46a0.js"
+    "static/js/main.c69810a6.js"
   ]
 }
