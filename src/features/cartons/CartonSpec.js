@@ -4,10 +4,17 @@ import Tooltip from "../../components/Tooltip";
 import SectionPanel from "../../components/SectionPanel";
 import FlatDieline from "./FlatDieline";
 import IsometricBox from "./IsometricBox";
-import PDFExtract from "../extract/PDFExtract";
+import DesignSelector from "../extract/DesignSelector";
 
-const inputStyle = { width: "100%", padding: "7px 8px", borderRadius: 6, border: "1px solid #ddd", fontSize: 14, marginTop: 4, boxSizing: "border-box" };
-const labelStyle = { fontSize: 11, color: "#666", fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 };
+const inputStyle = {
+  width: "100%", padding: "7px 8px", borderRadius: 6,
+  border: "1px solid #ddd", fontSize: 14, marginTop: 4,
+  boxSizing: "border-box",
+};
+const labelStyle = {
+  fontSize: 11, color: "#666", fontWeight: "700",
+  textTransform: "uppercase", letterSpacing: 0.6,
+};
 
 const CartonSpec = ({
   boxStyle, setBoxStyle,
@@ -16,33 +23,45 @@ const CartonSpec = ({
   height, setHeight,
   flatSpec,
   nestingOverride, setNestingOverride,
+  designAsset, setDesignAsset,
 }) => {
   return (
     <SectionPanel title="📦 Carton Specification">
-      {/* PDF Extract */}
-      <PDFExtract onExtracted={({ style, length, width, height, product_name }) => {
-        setBoxStyle(style);
-        setLength(length);
-        setWidth(width);
-        setHeight(height);
-      }} />
 
-      {/* Divider */}
-      <div style={{
-        borderTop: "1px solid #eee",
-        margin: "16px 0",
-        position: "relative",
-      }}>
-        <span style={{
-          position: "absolute", top: -9, left: "50%",
-          transform: "translateX(-50%)",
-          background: "white", padding: "0 8px",
-          fontSize: 11, color: "#aaa",
-        }}>
-          or enter manually
-        </span>
+{/* Carton Artwork */}
+      <div>
+        <div style={{ fontSize: 11, fontWeight: "700", color: BRAND, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8, borderTop: "2px solid " + BRAND_LIGHT, paddingTop: 12 }}>
+          🎨 Carton Artwork
+        </div>
+        <div style={{ fontSize: 12, color: "#888", marginBottom: 10 }}>
+          Upload the artwork PDF or image and draw a polygon around the carton dieline to save the design.
+        </div>
+        {designAsset ? (
+          <div>
+            <div style={{ border: "1px solid #eee", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>
+              <img
+                src={`data:image/png;base64,${designAsset.cropped_image_base64}`}
+                alt="Carton design"
+                style={{ width: "100%", display: "block" }}
+              />
+            </div>
+            <div style={{ fontSize: 12, color: "#27ae60", marginBottom: 6 }}>
+              ✅ {designAsset.polygon.length} point polygon saved
+            </div>
+            <button
+              onClick={() => setDesignAsset(null)}
+              style={{ fontSize: 12, color: "#e74c3c", background: "none", border: "1px solid #fcc", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+              × Remove artwork
+            </button>
+          </div>
+        ) : (
+          <DesignSelector
+            onDesignSaved={setDesignAsset}
+            jobId=""
+          />
+        )}
       </div>
-
+      
       {/* Box Style */}
       <div style={{ marginBottom: 14 }}>
         <label style={labelStyle}>Box Style <Tooltip text="The structural style determines flap dimensions" /></label>
@@ -122,7 +141,7 @@ const CartonSpec = ({
 
       {/* 3D Preview */}
       {length && width && height && (
-        <div>
+        <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 11, fontWeight: "700", color: BRAND, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>3D Preview</div>
           <div style={{ background: "#fafafa", border: "1px solid #eee", borderRadius: 8, padding: 8 }}>
             <IsometricBox L={length} W={width} H={height} />

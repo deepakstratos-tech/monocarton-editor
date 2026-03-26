@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { fabric } from "fabric";
 import { SCALE, STRAIGHT_COLOR, TUMBLE_FLIPPED, BRAND } from "../../config/api";
 
-const LayoutCanvas = ({ data, algorithm, loading }) => {
+const LayoutCanvas = ({ data, algorithm, loading, designAssets = {} }) => {
   const canvasRef = useRef(null);
   const fabricRef = useRef(null);
 
@@ -15,6 +15,72 @@ const LayoutCanvas = ({ data, algorithm, loading }) => {
     return () => canvas.dispose();
   }, []);
 
+  // ── DRAW SINGLE CARTON ──
+  const drawCarton = (canvas, carton, designAssets = {}) => {
+    const x = carton.x * SCALE;
+    const y = carton.y * SCALE;
+    const w = carton.w * SCALE;
+    const h = carton.h * SCALE;
+    const fill = carton.flipped ? TUMBLE_FLIPPED : STRAIGHT_COLOR;
+    const stroke = carton.flipped ? "#a04000" : "#1a4a7a";
+
+    // Check if we have a design asset
+    const design = designAssets["default"] || designAssets[carton.job_id];
+
+    if (design?.cropped_image_base64) {
+      // Render with artwork image
+      const imgEl = new window.Image();
+      imgEl.onload = () => {
+        const fabricImg = new fabric.Image(imgEl, {
+          left: 0, top: 0,
+          scaleX: (w - 2) / imgEl.width,
+          scaleY: (h - 2) / imgEl.height,
+        });
+
+        const border = new fabric.Rect({
+          left: 0, top: 0,
+          width: w - 2, height: h - 2,
+          fill: "transparent",
+          stroke, strokeWidth: 1.5,
+        });
+
+        canvas.add(new fabric.Group([fabricImg, border], {
+          left: x, top: y,
+          hasControls: true, hasBorders: true,
+        }));
+        canvas.renderAll();
+      };
+      imgEl.src = `data:image/png;base64,${design.cropped_image_base64}`;
+    } else {
+      // Fallback — plain coloured rectangle
+      const rect = new fabric.Rect({
+        left: 0, top: 0,
+        width: w - 1, height: h - 1,
+        fill, stroke, strokeWidth: 1, opacity: 0.85,
+      });
+
+      const arrow = new fabric.Text(carton.flipped ? "▼" : "▲", {
+        left: w / 2, top: h / 2 - 6,
+        fontSize: 8, fill: "white",
+        originX: "center", originY: "center",
+      });
+
+      const label = new fabric.Text(
+        `${Math.round(carton.w)}×${Math.round(carton.h)}`,
+        {
+          left: w / 2, top: h / 2 + 5,
+          fontSize: 6, fill: "white",
+          originX: "center", originY: "center",
+        }
+      );
+
+      canvas.add(new fabric.Group([rect, arrow, label], {
+        left: x, top: y,
+        hasControls: true, hasBorders: true,
+      }));
+    }
+  };
+
   useEffect(() => {
     if (!data) return;
     const canvas = fabricRef.current;
@@ -24,6 +90,7 @@ const LayoutCanvas = ({ data, algorithm, loading }) => {
     canvas.setWidth(data.sheet_w * SCALE);
     canvas.setHeight(data.sheet_h * SCALE);
 
+    // Sheet background
     canvas.add(new fabric.Rect({
       left: 0, top: 0,
       width: data.sheet_w * SCALE, height: data.sheet_h * SCALE,
@@ -31,6 +98,7 @@ const LayoutCanvas = ({ data, algorithm, loading }) => {
       selectable: false, evented: false,
     }));
 
+    // Margin border
     canvas.add(new fabric.Rect({
       left: 0, top: 0,
       width: data.sheet_w * SCALE, height: data.sheet_h * SCALE,
@@ -40,6 +108,7 @@ const LayoutCanvas = ({ data, algorithm, loading }) => {
       selectable: false, evented: false,
     }));
 
+    // Usable area
     canvas.add(new fabric.Rect({
       left: data.margin * SCALE, top: data.margin * SCALE,
       width: data.usable_w * SCALE, height: data.usable_h * SCALE,
@@ -49,6 +118,7 @@ const LayoutCanvas = ({ data, algorithm, loading }) => {
       selectable: false, evented: false,
     }));
 
+    // Margin label
     canvas.add(new fabric.Text(`${data.margin}mm margin`, {
       left: 4, top: 2, fontSize: 8, fill: "#c0392b",
       selectable: false, evented: false,
@@ -68,23 +138,11 @@ const LayoutCanvas = ({ data, algorithm, loading }) => {
       }
     ));
 
-    data.cartons.forEach(carton => {
-      const x = carton.x * SCALE;
-      const y = carton.y * SCALE;
-      const w = carton.w * SCALE;
-      const h = carton.h * SCALE;
-      const fill = carton.flipped ? TUMBLE_FLIPPED : STRAIGHT_COLOR;
-      const stroke = carton.flipped ? "#a04000" : "#1a4a7a";
-
-      const rect = new fabric.Rect({ left: 0, top: 0, width: w - 1, height: h - 1, fill, stroke, strokeWidth: 1, opacity: 0.85 });
-      const arrow = new fabric.Text(carton.flipped ? "▼" : "▲", { left: w / 2, top: h / 2 - 6, fontSize: 8, fill: "white", originX: "center", originY: "center" });
-      const label = new fabric.Text(`${Math.round(carton.w)}×${Math.round(carton.h)}`, { left: w / 2, top: h / 2 + 5, fontSize: 6, fill: "white", originX: "center", originY: "center" });
-
-      canvas.add(new fabric.Group([rect, arrow, label], { left: x, top: y, hasControls: true, hasBorders: true }));
-    });
+    // Draw all cartons
+    data.cartons.forEach(carton => drawCarton(canvas, carton, designAssets));
 
     canvas.renderAll();
-  }, [data]);
+  }, [data, designAssets]);
 
   return (
     <div style={{ background: "white", borderRadius: 12, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
@@ -111,6 +169,11 @@ const LayoutCanvas = ({ data, algorithm, loading }) => {
         <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <span style={{ width: 14, height: 14, background: "rgba(39,174,96,0.1)", border: "1px dashed #27ae60", borderRadius: 3, display: "inline-block" }} /> Usable area
         </span>
+        {designAssets["default"] && (
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 14, height: 14, background: "#f0f0f0", border: "1px solid #999", borderRadius: 3, display: "inline-block" }} /> Artwork
+          </span>
+        )}
       </div>
 
       <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: 700 }}>

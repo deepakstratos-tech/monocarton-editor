@@ -1,5 +1,5 @@
-export const API_BASE = "https://web-production-e59f.up.railway.app";
-
+// export const API_BASE = "https://web-production-e59f.up.railway.app";
+export const API_BASE = "http://127.0.0.1:8000";
 export const ALGORITHMS = [
   { id: "straight", label: "Straight", icon: "▲▲▲", desc: "All cartons same direction", endpoint: "/layout/straight", color: "#1565c0" },
   { id: "tumble", label: "Tumble", icon: "▲▼▲", desc: "Alternate rows flipped 180°", endpoint: "/layout/tumble", color: "#6a1b9a" },

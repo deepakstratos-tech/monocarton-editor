@@ -14,6 +14,9 @@ const inputStyle = { width: "100%", padding: "7px 8px", borderRadius: 6, border:
 const labelStyle = { fontSize: 11, color: "#666", fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 };
 
 const LayoutPage = ({ onError, onLoading }) => {
+
+  const [designAsset, setDesignAsset] = useState(null);
+
   // Carton spec
   const [boxStyle, setBoxStyle] = useState("bottom_side_lock");
   const [length, setLength] = useState(45);
@@ -98,6 +101,8 @@ const LayoutPage = ({ onError, onLoading }) => {
           flatSpec={flatSpec}
           nestingOverride={nestingOverride}
           setNestingOverride={setNestingOverride}
+          designAsset={designAsset}
+          setDesignAsset={setDesignAsset}
         />
 
         {/* Sheet Dimensions */}
@@ -169,7 +174,12 @@ const LayoutPage = ({ onError, onLoading }) => {
 
         <ComparisonTable comparison={comparison} onClose={() => setComparison(null)} />
 
-        <LayoutCanvas data={stats.cartons ? stats : null} algorithm={algorithm} loading={loading} />
+        <LayoutCanvas
+          data={stats.cartons ? stats : null}
+          algorithm={algorithm}
+          loading={loading}
+          designAssets={{ default: designAsset }}
+        />
       </div>
     </div>
   );
