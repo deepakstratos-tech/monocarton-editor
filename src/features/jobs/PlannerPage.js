@@ -47,7 +47,8 @@ const PlannerPage = ({ jobs }) => {
     if (layout) renderLayout(layout);
   }, [layout]);
 
-  const buildRequest = () => ({
+  const buildRequest = () => {
+  const req = {
     sheet_w: sheetW,
     sheet_h: sheetH,
     margin,
@@ -68,7 +69,10 @@ const PlannerPage = ({ jobs }) => {
       colours: j.colours,
       stamping: j.stamping,
     })),
-  });
+  };
+  console.log("Request:", JSON.stringify(req, null, 2));
+  return req;
+};
 
   const checkCompatibility = async () => {
     setLoading(true);
@@ -118,6 +122,16 @@ const PlannerPage = ({ jobs }) => {
         body: JSON.stringify(buildRequest()),
       });
       const data = await response.json();
+
+      // DEBUG — remove after fixing
+    console.log("Layout data:", JSON.stringify(data, null, 2));
+    console.log("Total cartons:", data.total_cartons_per_sheet);
+    console.log("Sheet size:", data.sheet_w, "x", data.sheet_h);
+    console.log("Cartons array length:", data.cartons?.length);
+    console.log("First carton:", data.cartons?.[0]);
+    console.log("Last carton:", data.cartons?.[data.cartons?.length - 1]);
+
+
       setLayout(data);
       setActiveTab("layout");
     } catch (err) {
@@ -128,64 +142,127 @@ const PlannerPage = ({ jobs }) => {
   };
 
   const renderLayout = (data) => {
-    const canvas = fabricRef.current;
-    if (!canvas) return;
-    canvas.clear();
-    canvas.setWidth(data.sheet_w * SCALE);
-    canvas.setHeight(data.sheet_h * SCALE);
+  const canvas = fabricRef.current;
+  if (!canvas) return;
 
-    // Sheet background
-    canvas.add(new fabric.Rect({
+  canvas.clear();
+  canvas.setWidth(data.sheet_w * SCALE);
+  canvas.setHeight(data.sheet_h * SCALE);
+
+  // Sheet background
+  canvas.add(new fabric.Rect({
+    left: 0, top: 0,
+    width: data.sheet_w * SCALE, height: data.sheet_h * SCALE,
+    fill: "#fdf6e3", stroke: "#333", strokeWidth: 2,
+    selectable: false, evented: false,
+  }));
+
+  // Margin border
+  canvas.add(new fabric.Rect({
+    left: 0, top: 0,
+    width: data.sheet_w * SCALE, height: data.sheet_h * SCALE,
+    fill: "transparent",
+    stroke: "rgba(231,76,60,0.35)",
+    strokeWidth: data.margin * SCALE * 2,
+    selectable: false, evented: false,
+  }));
+
+  // Margin label
+  canvas.add(new fabric.Text(`${data.margin}mm margin`, {
+    left: 4, top: 2, fontSize: 8, fill: "#c0392b",
+    selectable: false, evented: false,
+  }));
+
+  // Separate cartons into artwork vs plain
+  const cartonsWithArtwork = [];
+  const cartonsWithoutArtwork = [];
+
+  data.cartons.forEach(carton => {
+    const job = jobs.find(j => j.job_id === carton.job_id);
+    const design = job?.design;
+    if (design?.cropped_image_base64) {
+      cartonsWithArtwork.push({ carton, design });
+    } else {
+      cartonsWithoutArtwork.push({ carton });
+    }
+  });
+
+  // Draw plain cartons immediately
+  cartonsWithoutArtwork.forEach(({ carton }) => {
+    const x = carton.x * SCALE;
+    const y = carton.y * SCALE;
+    const w = carton.w * SCALE;
+    const h = carton.h * SCALE;
+
+    const rect = new fabric.Rect({
       left: 0, top: 0,
-      width: data.sheet_w * SCALE, height: data.sheet_h * SCALE,
-      fill: "#fdf6e3", stroke: "#333", strokeWidth: 2,
-      selectable: false, evented: false,
-    }));
-
-    // Margin border
-    canvas.add(new fabric.Rect({
-      left: 0, top: 0,
-      width: data.sheet_w * SCALE, height: data.sheet_h * SCALE,
-      fill: "transparent",
-      stroke: "rgba(231,76,60,0.35)",
-      strokeWidth: data.margin * SCALE * 2,
-      selectable: false, evented: false,
-    }));
-
-    // Draw cartons
-    data.cartons.forEach(carton => {
-      const x = carton.x * SCALE;
-      const y = carton.y * SCALE;
-      const w = carton.w * SCALE;
-      const h = carton.h * SCALE;
-
-      const rect = new fabric.Rect({
-        left: 0, top: 0,
-        width: w - 1, height: h - 1,
-        fill: carton.color,
-        stroke: "#fff",
-        strokeWidth: 1,
-        opacity: 0.85,
-      });
-
-      const label = new fabric.Text(
-        carton.product_name.substring(0, 8),
-        {
-          left: w / 2, top: h / 2,
-          fontSize: 6, fill: "white",
-          originX: "center", originY: "center",
-          fontWeight: "bold",
-        }
-      );
-
-      canvas.add(new fabric.Group([rect, label], {
-        left: x, top: y,
-        selectable: false,
-      }));
+      width: w - 1, height: h - 1,
+      fill: carton.color,
+      stroke: "#fff", strokeWidth: 1, opacity: 0.85,
     });
 
+    const label = new fabric.Text(
+      (carton.product_name || "").substring(0, 8),
+      {
+        left: w / 2, top: h / 2,
+        fontSize: Math.max(5, Math.min(9, h / 10)),
+        fill: "white",
+        originX: "center", originY: "center",
+        fontWeight: "bold",
+      }
+    );
+
+    canvas.add(new fabric.Group([rect, label], {
+      left: x, top: y, selectable: false,
+    }));
+  });
+
+  // Draw artwork cartons using fabric.Image.fromURL
+  if (cartonsWithArtwork.length === 0) {
     canvas.renderAll();
+    return;
+  }
+
+  let loadedCount = 0;
+  const total = cartonsWithArtwork.length;
+
+  const checkAndRender = () => {
+    loadedCount++;
+    if (loadedCount === total) canvas.renderAll();
   };
+
+  cartonsWithArtwork.forEach(({ carton, design }) => {
+    const x = carton.x * SCALE;
+    const y = carton.y * SCALE;
+    const w = carton.w * SCALE;
+    const h = carton.h * SCALE;
+
+    fabric.Image.fromURL(
+      `data:image/png;base64,${design.cropped_image_base64}`,
+      (fabricImg) => {
+        fabricImg.set({
+          left: 0, top: 0,
+          scaleX: (w - 2) / fabricImg.width,
+          scaleY: (h - 2) / fabricImg.height,
+        });
+
+        const border = new fabric.Rect({
+          left: 0, top: 0,
+          width: w - 2, height: h - 2,
+          fill: "transparent",
+          stroke: "#999", strokeWidth: 1,
+        });
+
+        canvas.add(new fabric.Group([fabricImg, border], {
+          left: x, top: y, selectable: false,
+        }));
+
+        checkAndRender();
+      },
+      { crossOrigin: "anonymous" }
+    );
+  });
+};
 
   const exportDXF = () => {
     if (!layout?.cartons?.length) return;
@@ -539,97 +616,56 @@ const PlannerPage = ({ jobs }) => {
           )}
 
           {/* LAYOUT TAB */}
-          {activeTab === "layout" && (
-            <div>
-              {!layout ? (
-                <div style={{ background: "white", borderRadius: 12, padding: 40, textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                  <div style={{ fontSize: 13, color: "#888" }}>Click "Run Multi-SKU Layout" to see the full imposition layout.</div>
-                </div>
+{activeTab === "layout" && (
+  <div>
+    {!layout ? (
+      <div style={{ background: "white", borderRadius: 12, padding: 40, textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+        <div style={{ fontSize: 13, color: "#888" }}>Click "Run Multi-SKU Layout" to see the full imposition layout.</div>
+      </div>
+    ) : (
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* ... all your stats, tables etc ... */}
+      </div>
+    )}
+  </div>
+)}
+
+{/* Canvas — ALWAYS rendered, visibility toggled */}
+<div style={{ display: activeTab === "layout" && layout ? "block" : "none" }}>
+  <div style={{ background: "white", borderRadius: 12, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+    <div style={{ fontSize: 13, fontWeight: "800", color: BRAND, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>
+      🖼️ Layout Preview
+    </div>
+    {layout && (
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+        {layout.jobs_summary.map((jobSummary) => {
+          const job = jobs.find(j => j.job_id === jobSummary.job_id);
+          return (
+            <div key={jobSummary.job_id} style={{
+              display: "flex", alignItems: "center", gap: 6,
+              fontSize: 12, background: "#f8f9fa",
+              borderRadius: 6, padding: "4px 8px",
+            }}>
+              {job?.design?.cropped_image_base64 ? (
+                <img
+                  src={`data:image/png;base64,${job.design.cropped_image_base64}`}
+                  alt={jobSummary.product_name}
+                  style={{ width: 20, height: 20, objectFit: "cover", borderRadius: 3, border: "1px solid #eee" }}
+                />
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  {/* Stats */}
-                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                    <StatCard label="Total Cartons/Sheet" value={layout.total_cartons_per_sheet} color={BRAND} sub="all jobs combined" />
-                    <StatCard label="Sheet Utilization" value={`${layout.utilization}%`} color={layout.utilization >= 80 ? "#27ae60" : layout.utilization >= 60 ? "#f39c12" : "#e74c3c"} sub={layout.utilization >= 80 ? "Excellent" : "Moderate"} />
-                    <StatCard label="Target Impressions" value={layout.target_impressions} color="#6a1b9a" sub="press runs" />
-                    <StatCard label="Alignment Score" value={`${(layout.impression_alignment_score * 100).toFixed(1)}%`} color="#16a085" sub="color consistency" />
-                  </div>
-
-                  {/* Overrun warning */}
-                  {layout.overrun_warning && (
-                    <div style={{ background: "#fff8e1", border: "1px solid #f9a825", borderRadius: 8, padding: 12, fontSize: 13, color: "#555" }}>
-                      ⚠️ One or more jobs exceed the overrun tolerance. Check individual job summaries below.
-                    </div>
-                  )}
-
-                  {/* Layout notes */}
-                  {layout.layout_notes.length > 0 && (
-                    <div style={{ background: "#e8f0f7", border: "1px solid #b3cce8", borderRadius: 8, padding: 12 }}>
-                      {layout.layout_notes.map((note, i) => (
-                        <div key={i} style={{ fontSize: 13, color: "#333", marginBottom: 4 }}>ℹ️ {note}</div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Per job summary */}
-                  <div style={{ background: "white", borderRadius: 10, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                    <div style={{ fontWeight: "700", color: BRAND, marginBottom: 12, fontSize: 13, textTransform: "uppercase" }}>Per Job Summary</div>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                      <thead>
-                        <tr style={{ background: BRAND_LIGHT }}>
-                          <th style={{ padding: "8px 12px", textAlign: "left", color: BRAND }}>Job</th>
-                          <th style={{ padding: "8px 12px", textAlign: "center", color: BRAND }}>Cartons/Sheet</th>
-                          <th style={{ padding: "8px 12px", textAlign: "center", color: BRAND }}>Impressions</th>
-                          <th style={{ padding: "8px 12px", textAlign: "center", color: BRAND }}>Actual Printed</th>
-                          <th style={{ padding: "8px 12px", textAlign: "center", color: BRAND }}>Overrun</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {layout.jobs_summary.map((job, idx) => (
-                          <tr key={job.job_id} style={{ borderBottom: "1px solid #eee" }}>
-                            <td style={{ padding: "8px 12px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <div style={{ width: 12, height: 12, borderRadius: 3, background: job.color }} />
-                                <div>
-                                  <div style={{ fontWeight: "700" }}>{job.product_name}</div>
-                                  <div style={{ fontSize: 11, color: "#888" }}>{job.client_name}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: "700" }}>{job.cartons_per_sheet}</td>
-                            <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: "700", color: BRAND }}>{job.impressions_needed}</td>
-                            <td style={{ padding: "8px 12px", textAlign: "center" }}>{job.actual_printed.toLocaleString()}</td>
-                            <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: "700", color: job.overrun_pct > 5 ? "#e74c3c" : "#27ae60" }}>
-                              {job.overrun_pct}%
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Canvas */}
-                  <div style={{ background: "white", borderRadius: 12, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
-                    <div style={{ fontSize: 13, fontWeight: "800", color: BRAND, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12 }}>
-                      🖼️ Layout Preview
-                    </div>
-                    {/* Legend */}
-                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-                      {layout.jobs_summary.map(job => (
-                        <div key={job.job_id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                          <div style={{ width: 12, height: 12, borderRadius: 3, background: job.color }} />
-                          {job.product_name}
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ overflowX: "auto" }}>
-                      <canvas ref={canvasRef} />
-                    </div>
-                  </div>
-                </div>
+                <div style={{ width: 12, height: 12, borderRadius: 3, background: jobSummary.color }} />
               )}
+              <span>{jobSummary.product_name}</span>
             </div>
-          )}
+          );
+        })}
+      </div>
+    )}
+    <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: 700 }}>
+      <canvas ref={canvasRef} />
+    </div>
+  </div>
+</div>
         </div>
       </div>
     </div>
