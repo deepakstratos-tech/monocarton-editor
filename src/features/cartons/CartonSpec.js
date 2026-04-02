@@ -58,6 +58,10 @@ const CartonSpec = ({
           <DesignSelector
             onDesignSaved={setDesignAsset}
             jobId=""
+            declaredStyle={boxStyle}
+            onStyleSuggested={(suggestedStyle) => {
+              setBoxStyle(suggestedStyle);
+            }}
           />
         )}
       </div>

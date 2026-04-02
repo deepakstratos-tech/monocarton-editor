@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mono — Metrics Visual Reference</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; color: #333; }
+  .page-header {
+    background: #1a4a7a; color: white;
+    padding: 28px 40px;
+  }
+  .page-header h1 { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; }
+  .page-header p { font-size: 14px; opacity: 0.75; margin-top: 6px; }
+  .section-title {
+    font-size: 13px; font-weight: 800; color: #1a4a7a;
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 32px 40px 12px;
+    border-bottom: 2px solid #e8f0f7;
+    margin-bottom: 24px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+    gap: 24px;
+    padding: 0 40px 40px;
+  }
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  }
+  .card h3 {
+    font-size: 15px; font-weight: 800; color: #1a4a7a;
+    margin-bottom: 6px;
+  }
+  .card .desc {
+    font-size: 12px; color: #888; margin-bottom: 16px; line-height: 1.5;
+  }
+  .formula-box {
+    background: #e8f0f7; border-left: 3px solid #1a4a7a;
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; color: #1a4a7a; font-family: monospace;
+    margin-bottom: 16px; line-height: 1.8;
+  }
+  .example-box {
+    background: #e8f5e9; border-left: 3px solid #27ae60;
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; color: #1a6b3c; font-family: monospace;
+    margin-top: 12px; line-height: 1.8;
+  }
+  svg text { font-family: 'Segoe UI', sans-serif; }
+  .range-good { color: #27ae60; font-weight: 700; font-size: 12px; }
+  .range-warn { color: #f39c12; font-weight: 700; font-size: 12px; }
+  .range-bad  { color: #e74c3c; font-weight: 700; font-size: 12px; }
+  .range-row {
+    display: flex; gap: 16px; margin-top: 10px;
+    font-size: 12px; align-items: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Mono — Metrics Visual Reference</h1>
+  <p>Every metric explained with diagrams · For Mayank Tyagi · Mono v2.0</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 1: FLAT SIZE METRICS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">📐 Section 1 — Flat Size Metrics</div>
+<div class="grid">
+
+  <!-- FLAT W AND FLAT H -->
+  <div class="card">
+    <h3>Flat Width &amp; Flat Height</h3>
+    <div class="desc">The dimensions of the carton when completely unfolded flat. This is what occupies space on the print sheet.</div>
+    <div class="formula-box">
+      Flat W = 2 × (L + W) + Glue Flap (10mm)<br>
+      Flat H = H + Top Tuck Depth + Bottom Flap Depth
+    </div>
+    <svg width="100%" viewBox="0 0 460 280" style="display:block">
+      <!-- Sheet background -->
+      <rect x="10" y="10" width="440" height="260" rx="4" fill="#fdf6e3" stroke="#ccc" stroke-width="1"/>
+      <!-- Glue flap -->
+      <rect x="20" y="60" width="30" height="160" fill="#fef9c3" stroke="#eab308" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="35" y="148" font-size="9" fill="#856404" text-anchor="middle" transform="rotate(-90,35,148)">GLUE 10mm</text>
+      <!-- Left panel -->
+      <rect x="50" y="60" width="70" height="160" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="85" y="145" font-size="10" fill="#166534" text-anchor="middle">LEFT</text>
+      <text x="85" y="158" font-size="9" fill="#166534" text-anchor="middle">W=45mm</text>
+      <!-- Front panel -->
+      <rect x="120" y="60" width="70" height="160" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+      <text x="155" y="142" font-size="11" fill="#4c1d95" text-anchor="middle" font-weight="bold">FRONT</text>
+      <text x="155" y="157" font-size="9" fill="#4c1d95" text-anchor="middle">L=45mm</text>
+      <!-- Back panel -->
+      <rect x="190" y="60" width="70" height="160" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="225" y="145" font-size="10" fill="#166534" text-anchor="middle">RIGHT</text>
+      <text x="225" y="158" font-size="9" fill="#166534" text-anchor="middle">W=45mm</text>
+      <!-- Back2 -->
+      <rect x="260" y="60" width="70" height="160" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+      <text x="295" y="145" font-size="10" fill="#475569" text-anchor="middle">BACK</text>
+      <text x="295" y="158" font-size="9" fill="#475569" text-anchor="middle">L=45mm</text>
+      <!-- Top tuck -->
+      <rect x="120" y="20" width="70" height="40" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="155" y="44" font-size="9" fill="#1e40af" text-anchor="middle">TOP TUCK 33.2mm</text>
+      <!-- Bottom -->
+      <rect x="120" y="220" width="70" height="40" fill="#fce7f3" stroke="#db2777" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="155" y="244" font-size="9" fill="#9d174d" text-anchor="middle">BOTTOM 41.5mm</text>
+      <!-- Flat W arrow -->
+      <line x1="20" y1="272" x2="330" y2="272" stroke="#e74c3c" stroke-width="1.5" marker-end="url(#arr)" marker-start="url(#arrl)"/>
+      <text x="175" y="268" font-size="10" fill="#e74c3c" text-anchor="middle" font-weight="bold">Flat W = 190mm</text>
+      <!-- Flat H arrow -->
+      <line x1="345" y1="20" x2="345" y2="260" stroke="#e74c3c" stroke-width="1.5" marker-end="url(#arr)" marker-start="url(#arrl)"/>
+      <text x="390" y="145" font-size="10" fill="#e74c3c" text-anchor="middle" font-weight="bold" transform="rotate(90,390,145)">Flat H = 157.7mm</text>
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#e74c3c"/>
+        </marker>
+        <marker id="arrl" markerWidth="8" markerHeight="8" refX="2" refY="3" orient="auto-start-reverse">
+          <path d="M0,0 L0,6 L8,3 z" fill="#e74c3c"/>
+        </marker>
+      </defs>
+    </svg>
+    <div class="example-box">
+      Musli Power: L=45, W=45, H=83mm (Bottom Side Lock)<br>
+      Flat W = 2×(45+45)+10 = <strong>190mm</strong><br>
+      Flat H = 83+33.2+41.5 = <strong>157.7mm</strong>
+    </div>
+  </div>
+
+  <!-- TOP TUCK AND BOTTOM FLAP BY STYLE -->
+  <div class="card">
+    <h3>Flap Depths by Box Style</h3>
+    <div class="desc">Each box style has different ratios for top tuck and bottom flap depths, calculated as a percentage of the carton height H.</div>
+    <svg width="100%" viewBox="0 0 460 260" style="display:block">
+      <!-- Style 1: Bottom Side Lock -->
+      <rect x="20" y="20" width="90" height="220" rx="4" fill="#f8f9fa" stroke="#ddd"/>
+      <text x="65" y="14" font-size="9" fill="#1a4a7a" text-anchor="middle" font-weight="bold">Bottom Side Lock</text>
+      <rect x="25" y="25" width="80" height="44" fill="#dbeafe" stroke="#3b82f6" stroke-dasharray="3,2"/>
+      <text x="65" y="50" font-size="8" fill="#1e40af" text-anchor="middle">Top Tuck</text>
+      <text x="65" y="61" font-size="8" fill="#1e40af" text-anchor="middle">H×0.40</text>
+      <rect x="25" y="69" width="80" height="110" fill="#ede9fe" stroke="#7c3aed"/>
+      <text x="65" y="128" font-size="9" fill="#4c1d95" text-anchor="middle">BODY H</text>
+      <rect x="25" y="179" width="80" height="55" fill="#fce7f3" stroke="#db2777" stroke-dasharray="3,2"/>
+      <text x="65" y="208" font-size="8" fill="#9d174d" text-anchor="middle">Bottom Lock</text>
+      <text x="65" y="220" font-size="8" fill="#9d174d" text-anchor="middle">H×0.50</text>
+
+      <!-- Style 2: Tuck End -->
+      <rect x="125" y="20" width="90" height="220" rx="4" fill="#f8f9fa" stroke="#ddd"/>
+      <text x="170" y="14" font-size="9" fill="#1a4a7a" text-anchor="middle" font-weight="bold">Straight/Reverse Tuck</text>
+      <rect x="130" y="25" width="80" height="39" fill="#dbeafe" stroke="#3b82f6" stroke-dasharray="3,2"/>
+      <text x="170" y="47" font-size="8" fill="#1e40af" text-anchor="middle">Top Tuck H×0.35</text>
+      <rect x="130" y="64" width="80" height="110" fill="#ede9fe" stroke="#7c3aed"/>
+      <text x="170" y="123" font-size="9" fill="#4c1d95" text-anchor="middle">BODY H</text>
+      <rect x="130" y="174" width="80" height="60" fill="#fce7f3" stroke="#db2777" stroke-dasharray="3,2"/>
+      <text x="170" y="200" font-size="8" fill="#9d174d" text-anchor="middle">Bot Tuck</text>
+      <text x="170" y="212" font-size="8" fill="#9d174d" text-anchor="middle">H×0.35</text>
+
+      <!-- Style 3: Lock Bottom -->
+      <rect x="230" y="20" width="90" height="220" rx="4" fill="#f8f9fa" stroke="#ddd"/>
+      <text x="275" y="14" font-size="9" fill="#1a4a7a" text-anchor="middle" font-weight="bold">Lock Bottom</text>
+      <rect x="235" y="25" width="80" height="44" fill="#dbeafe" stroke="#3b82f6" stroke-dasharray="3,2"/>
+      <text x="275" y="50" font-size="8" fill="#1e40af" text-anchor="middle">Top Tuck</text>
+      <text x="275" y="61" font-size="8" fill="#1e40af" text-anchor="middle">H×0.40</text>
+      <rect x="235" y="69" width="80" height="88" fill="#ede9fe" stroke="#7c3aed"/>
+      <text x="275" y="117" font-size="9" fill="#4c1d95" text-anchor="middle">BODY H</text>
+      <rect x="235" y="157" width="80" height="77" fill="#fce7f3" stroke="#db2777" stroke-dasharray="3,2"/>
+      <text x="275" y="197" font-size="8" fill="#9d174d" text-anchor="middle">Auto Lock</text>
+      <text x="275" y="209" font-size="8" fill="#9d174d" text-anchor="middle">Bottom H×0.60</text>
+
+      <!-- Legend -->
+      <rect x="350" y="80" width="12" height="12" fill="#dbeafe" stroke="#3b82f6"/>
+      <text x="366" y="91" font-size="9" fill="#333">Top Tuck</text>
+      <rect x="350" y="100" width="12" height="12" fill="#ede9fe" stroke="#7c3aed"/>
+      <text x="366" y="111" font-size="9" fill="#333">Body</text>
+      <rect x="350" y="120" width="12" height="12" fill="#fce7f3" stroke="#db2777"/>
+      <text x="366" y="131" font-size="9" fill="#333">Bottom Flap</text>
+    </svg>
+    <div class="example-box">
+      H=83mm, Bottom Side Lock:<br>
+      Top Tuck = 83×0.40 = <strong>33.2mm</strong><br>
+      Bottom Lock = 83×0.50 = <strong>41.5mm</strong><br>
+      Glue Flap = <strong>10mm</strong> (standard)
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 2: LAYOUT METRICS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">📊 Section 2 — Layout Metrics</div>
+<div class="grid">
+
+  <!-- CARTONS PER SHEET + UTILIZATION -->
+  <div class="card">
+    <h3>Cartons Per Sheet &amp; Sheet Utilization</h3>
+    <div class="desc">How many cartons fit on the usable area of the sheet, and what percentage of the sheet area is covered.</div>
+    <div class="formula-box">
+      Usable W = Sheet W − 2 × Margin<br>
+      Usable H = Sheet H − 2 × Margin<br>
+      Cols = FLOOR(Usable W / Flat W)<br>
+      Rows = FLOOR(Usable H / Flat H)<br>
+      Cartons = Cols × Rows<br>
+      Utilization = (Cartons × Flat W × Flat H) / (Usable W × Usable H) × 100
+    </div>
+    <svg width="100%" viewBox="0 0 460 300" style="display:block">
+      <!-- Sheet -->
+      <rect x="20" y="20" width="310" height="260" rx="3" fill="#fdf6e3" stroke="#333" stroke-width="2"/>
+      <!-- Margin shading -->
+      <rect x="20" y="20" width="310" height="260" rx="3" fill="transparent" stroke="rgba(231,76,60,0.4)" stroke-width="10"/>
+      <!-- Usable area -->
+      <rect x="30" y="30" width="290" height="240" fill="rgba(39,174,96,0.05)" stroke="#27ae60" stroke-width="1" stroke-dasharray="4,3"/>
+      <!-- Cartons 3×6 grid scaled -->
+      <!-- Row 1 -->
+      <rect x="31" y="31" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="122" y="31" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="213" y="31" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <!-- Row 2 -->
+      <rect x="31" y="68" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="122" y="68" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="213" y="68" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <!-- Row 3 -->
+      <rect x="31" y="105" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="122" y="105" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="213" y="105" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <!-- Row 4 -->
+      <rect x="31" y="142" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="122" y="142" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="213" y="142" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <!-- Row 5 -->
+      <rect x="31" y="179" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="122" y="179" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="213" y="179" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <!-- Row 6 -->
+      <rect x="31" y="216" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="122" y="216" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <rect x="213" y="216" width="90" height="36" fill="#4F86C6" opacity="0.85" stroke="white" stroke-width="0.5"/>
+      <!-- Remainder area -->
+      <rect x="303" y="30" width="17" height="240" fill="rgba(231,76,60,0.12)" stroke="#e74c3c" stroke-width="0.5" stroke-dasharray="2,2"/>
+      <text x="311" y="155" font-size="8" fill="#e74c3c" text-anchor="middle" transform="rotate(90,311,155)">Remainder W</text>
+      <rect x="31" y="252" width="272" height="18" fill="rgba(231,76,60,0.12)" stroke="#e74c3c" stroke-width="0.5" stroke-dasharray="2,2"/>
+      <text x="167" y="264" font-size="8" fill="#e74c3c" text-anchor="middle">Remainder H</text>
+      <!-- Labels -->
+      <text x="76" y="53" font-size="8" fill="white" text-anchor="middle" font-weight="bold">▲</text>
+      <!-- Col/Row labels -->
+      <text x="76" y="295" font-size="9" fill="#555" text-anchor="middle">Col 1</text>
+      <text x="167" y="295" font-size="9" fill="#555" text-anchor="middle">Col 2</text>
+      <text x="258" y="295" font-size="9" fill="#555" text-anchor="middle">Col 3</text>
+      <text x="15" y="52" font-size="8" fill="#555" text-anchor="middle">R1</text>
+      <text x="15" y="89" font-size="8" fill="#555" text-anchor="middle">R2</text>
+      <text x="15" y="126" font-size="8" fill="#555" text-anchor="middle">R3</text>
+      <text x="15" y="163" font-size="8" fill="#555" text-anchor="middle">R4</text>
+      <text x="15" y="200" font-size="8" fill="#555" text-anchor="middle">R5</text>
+      <text x="15" y="237" font-size="8" fill="#555" text-anchor="middle">R6</text>
+      <!-- Stats -->
+      <text x="360" y="60" font-size="11" fill="#1a4a7a" font-weight="bold">Sheet: 700×1000mm</text>
+      <text x="360" y="80" font-size="11" fill="#555">Margin: 10mm</text>
+      <text x="360" y="100" font-size="11" fill="#555">Usable: 680×980mm</text>
+      <text x="360" y="125" font-size="11" fill="#4F86C6" font-weight="bold">Cols: 3</text>
+      <text x="360" y="145" font-size="11" fill="#4F86C6" font-weight="bold">Rows: 6</text>
+      <text x="360" y="170" font-size="13" fill="#27ae60" font-weight="bold">Total: 18</text>
+      <text x="360" y="195" font-size="11" fill="#27ae60">Util: 80.93%</text>
+      <!-- Margin label -->
+      <text x="175" y="17" font-size="9" fill="#e74c3c" text-anchor="middle">← 10mm margin all sides →</text>
+    </svg>
+    <div class="range-row">
+      <span class="range-good">≥ 80% Excellent</span>
+      <span class="range-warn">60–80% Good</span>
+      <span class="range-bad">&lt; 60% Review</span>
+    </div>
+  </div>
+
+  <!-- NESTING SAVING -->
+  <div class="card">
+    <h3>Nesting Saving (Tumble Layout)</h3>
+    <div class="desc">In tumble layout, alternate rows are flipped 180°. The top tuck of one row nests beside the bottom of the adjacent flipped row, saving vertical space.</div>
+    <div class="formula-box">
+      Nesting Saving mm = Top Tuck Depth<br>
+      Nesting Saving % = Top Tuck / Flat H × 100<br>
+      Pair Height = 2 × Flat H − Nesting Saving mm<br>
+      Extra Rows = FLOOR(Usable H / Pair Height) × 2
+    </div>
+    <svg width="100%" viewBox="0 0 460 300" style="display:block">
+      <!-- Straight layout comparison -->
+      <text x="100" y="18" font-size="11" fill="#1a4a7a" text-anchor="middle" font-weight="bold">Straight Layout</text>
+      <text x="330" y="18" font-size="11" fill="#6a1b9a" text-anchor="middle" font-weight="bold">Tumble Layout</text>
+
+      <!-- Straight: Row 1 normal -->
+      <rect x="20" y="24" width="155" height="20" fill="#dbeafe" stroke="#3b82f6" stroke-dasharray="3,2"/>
+      <text x="97" y="38" font-size="8" fill="#1e40af" text-anchor="middle">Top Tuck 33.2mm</text>
+      <rect x="20" y="44" width="155" height="66" fill="#4F86C6" stroke="#1a4a7a"/>
+      <text x="97" y="80" font-size="10" fill="white" text-anchor="middle">▲ Row 1 Normal</text>
+      <rect x="20" y="110" width="155" height="25" fill="#fce7f3" stroke="#db2777" stroke-dasharray="3,2"/>
+      <text x="97" y="126" font-size="8" fill="#9d174d" text-anchor="middle">Bottom 41.5mm</text>
+
+      <!-- Straight: Row 2 normal -->
+      <rect x="20" y="135" width="155" height="20" fill="#dbeafe" stroke="#3b82f6" stroke-dasharray="3,2"/>
+      <text x="97" y="149" font-size="8" fill="#1e40af" text-anchor="middle">Top Tuck 33.2mm</text>
+      <rect x="20" y="155" width="155" height="66" fill="#4F86C6" stroke="#1a4a7a" opacity="0.75"/>
+      <text x="97" y="191" font-size="10" fill="white" text-anchor="middle">▲ Row 2 Normal</text>
+      <rect x="20" y="221" width="155" height="25" fill="#fce7f3" stroke="#db2777" stroke-dasharray="3,2"/>
+      <text x="97" y="237" font-size="8" fill="#9d174d" text-anchor="middle">Bottom 41.5mm</text>
+
+      <!-- Straight total height arrow -->
+      <line x1="10" y1="24" x2="10" y2="246" stroke="#e74c3c" stroke-width="1.5"/>
+      <text x="5" y="138" font-size="9" fill="#e74c3c" text-anchor="middle" transform="rotate(-90,5,138)">2 × 157.7 = 315.4mm</text>
+
+      <!-- Tumble: Row 1 normal -->
+      <rect x="240" y="24" width="155" height="20" fill="#dbeafe" stroke="#3b82f6" stroke-dasharray="3,2"/>
+      <text x="317" y="38" font-size="8" fill="#1e40af" text-anchor="middle">Top Tuck 33.2mm</text>
+      <rect x="240" y="44" width="155" height="66" fill="#4F86C6" stroke="#1a4a7a"/>
+      <text x="317" y="80" font-size="10" fill="white" text-anchor="middle">▲ Row 1 Normal</text>
+      <rect x="240" y="110" width="155" height="25" fill="#fce7f3" stroke="#db2777" stroke-dasharray="3,2"/>
+      <text x="317" y="126" font-size="8" fill="#9d174d" text-anchor="middle">Bottom 41.5mm</text>
+
+      <!-- Tumble: Row 2 FLIPPED — nesting overlap shown -->
+      <!-- Overlap zone -->
+      <rect x="240" y="102" width="155" height="33" fill="rgba(255,165,0,0.25)" stroke="#f39c12" stroke-width="1" stroke-dasharray="3,2"/>
+      <text x="317" y="122" font-size="8" fill="#d97706" text-anchor="middle">⟵ Nesting 33.2mm ⟶</text>
+
+      <rect x="240" y="135" width="155" height="25" fill="#fce7f3" stroke="#e67e22" stroke-dasharray="3,2"/>
+      <text x="317" y="151" font-size="8" fill="#c2410c" text-anchor="middle">Bottom 41.5mm (flipped)</text>
+      <rect x="240" y="160" width="155" height="66" fill="#e67e22" stroke="#a04000"/>
+      <text x="317" y="196" font-size="10" fill="white" text-anchor="middle">▼ Row 2 Flipped</text>
+      <rect x="240" y="226" width="155" height="20" fill="#dbeafe" stroke="#3b82f6" stroke-dasharray="3,2"/>
+      <text x="317" y="240" font-size="8" fill="#1e40af" text-anchor="middle">Top Tuck (flipped)</text>
+
+      <!-- Tumble total height arrow -->
+      <line x1="410" y1="24" x2="410" y2="246" stroke="#27ae60" stroke-width="1.5"/>
+      <text x="420" y="138" font-size="9" fill="#27ae60" text-anchor="middle" transform="rotate(90,420,138)">282.2mm SAVED 33.2mm</text>
+
+      <!-- Saving callout -->
+      <rect x="60" y="260" width="330" height="30" rx="4" fill="#e8f5e9" stroke="#27ae60"/>
+      <text x="225" y="279" font-size="10" fill="#166534" text-anchor="middle" font-weight="bold">
+        Tumble saves 33.2mm per pair → fits extra row per sheet!
+      </text>
+    </svg>
+    <div class="example-box">
+      Musli Power: Flat H=157.7mm, Nesting=33.2mm<br>
+      Straight: 2 rows = 315.4mm → 6 rows in 980mm → <strong>18 cartons</strong><br>
+      Tumble: pair = 282.2mm → 3 pairs+1 row in 980mm → <strong>21 cartons</strong>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SECTION 3: MULTI-SKU / GANG PRINTING METRICS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="section-title">🖨️ Section 3 — Gang Printing Metrics</div>
+<div class="grid">
+
+  <!-- IMPRESSIONS + OVERRUN -->
+  <div class="card">
+    <h3>Impressions Needed &amp; Overrun</h3>
+    <div class="desc">Impressions = number of times the sheet goes through the press. Since you can only print complete sheets, you always round UP — which causes a small overrun.</div>
+    <div class="formula-box">
+      Impressions = CEILING(Quantity / Cartons Per Sheet)<br>
+      Actual Printed = Impressions × Cartons Per Sheet<br>
+      Overrun % = (Actual − Required) / Required × 100
+    </div>
+    <svg width="100%" viewBox="0 0 460 240" style="display:block">
+      <!-- Press run visualization -->
+      <text x="230" y="18" font-size="11" fill="#1a4a7a" text-anchor="middle" font-weight="bold">
+        Qty=5000, Cartons/Sheet=9 → Need 556 impressions
+      </text>
+      <!-- Impressions bar -->
+      <rect x="20" y="28" width="420" height="36" rx="3" fill="#e8f0f7" stroke="#1a4a7a" stroke-width="1"/>
+      <rect x="20" y="28" width="415" height="36" rx="3" fill="#4F86C6" opacity="0.8"/>
+      <text x="230" y="51" font-size="10" fill="white" text-anchor="middle" font-weight="bold">556 impressions × 9 cartons = 5,004 printed</text>
+
+      <!-- Required quantity marker -->
+      <line x1="413" y1="24" x2="413" y2="70" stroke="#e74c3c" stroke-width="2" stroke-dasharray="4,3"/>
+      <text x="413" y="82" font-size="9" fill="#e74c3c" text-anchor="middle">5000 required</text>
+
+      <!-- Overrun zone -->
+      <rect x="413" y="28" width="8" height="36" fill="#e74c3c" opacity="0.6"/>
+      <text x="440" y="51" font-size="9" fill="#e74c3c">+4 units</text>
+
+      <!-- Step by step breakdown -->
+      <rect x="20" y="100" width="130" height="60" rx="6" fill="#e8f0f7" stroke="#1a4a7a"/>
+      <text x="85" y="122" font-size="10" fill="#1a4a7a" text-anchor="middle" font-weight="bold">Required</text>
+      <text x="85" y="142" font-size="16" fill="#1a4a7a" text-anchor="middle" font-weight="bold">5,000</text>
+      <text x="85" y="156" font-size="9" fill="#888" text-anchor="middle">units needed</text>
+
+      <text x="170" y="135" font-size="18" fill="#555" text-anchor="middle">÷</text>
+
+      <rect x="190" y="100" width="130" height="60" rx="6" fill="#e8f0f7" stroke="#1a4a7a"/>
+      <text x="255" y="122" font-size="10" fill="#1a4a7a" text-anchor="middle" font-weight="bold">Cartons/Sheet</text>
+      <text x="255" y="142" font-size="16" fill="#1a4a7a" text-anchor="middle" font-weight="bold">9</text>
+      <text x="255" y="156" font-size="9" fill="#888" text-anchor="middle">per impression</text>
+
+      <text x="340" y="135" font-size="14" fill="#555" text-anchor="middle">= ⌈555.6⌉ =</text>
+
+      <rect x="370" y="100" width="75" height="60" rx="6" fill="#4F86C6"/>
+      <text x="407" y="122" font-size="10" fill="white" text-anchor="middle" font-weight="bold">Impressions</text>
+      <text x="407" y="142" font-size="16" fill="white" text-anchor="middle" font-weight="bold">556</text>
+
+      <!-- Overrun calculation -->
+      <rect x="20" y="178" width="420" height="50" rx="6" fill="#fff8e1" stroke="#f9a825"/>
+      <text x="230" y="198" font-size="10" fill="#856404" text-anchor="middle">
+        Actual = 556 × 9 = 5,004  |  Overrun = (5004−5000)/5000 × 100 = 0.08%  ✅ Under 5% tolerance
+      </text>
+      <text x="230" y="218" font-size="10" fill="#92400e" text-anchor="middle" font-weight="bold">
+        If Overrun &gt; 5% → Mono shows ⚠️ warning — review carton count or quantity
+      </text>
+    </svg>
+    <div class="range-row">
+      <span class="range-good">0–5% Acceptable</span>
+      <span class="range-warn">5–10% Review</span>
+      <span class="range-bad">&gt; 10% High waste</span>
+    </div>
+  </div>
+
+  <!-- IMPRESSION ALIGNMENT -->
+  <div class="card">
+    <h3>Impression Alignment Score</h3>
+    <div class="desc">When multiple jobs are on the same sheet, they must all complete in the same number of impressions. Otherwise the second job is printed in a different press run — with different ink density — causing colour variation.</div>
+    <div class="formula-box">
+      Score = 1 − (MAX impressions − MIN impressions) / MAX impressions<br>
+      Score = 1.0 (100%) = perfect alignment = one press run<br>
+      Score &lt; 0.9 = colour consistency risk
+    </div>
+    <svg width="100%" viewBox="0 0 460 290" style="display:block">
+      <!-- MISALIGNED example -->
+      <text x="110" y="18" font-size="10" fill="#e74c3c" text-anchor="middle" font-weight="bold">❌ Misaligned (Bad)</text>
+      <text x="340" y="18" font-size="10" fill="#27ae60" text-anchor="middle" font-weight="bold">✅ Aligned (Good)</text>
+
+      <!-- Misaligned: Job A bar -->
+      <text x="25" y="36" font-size="9" fill="#555">Job A</text>
+      <rect x="55" y="26" width="120" height="22" rx="2" fill="#4F86C6"/>
+      <text x="115" y="41" font-size="8" fill="white" text-anchor="middle">834 impressions</text>
+      <line x1="175" y1="22" x2="175" y2="54" stroke="#4F86C6" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+      <!-- Misaligned: Job B bar -->
+      <text x="25" y="66" font-size="9" fill="#555">Job B</text>
+      <rect x="55" y="56" width="200" height="22" rx="2" fill="#e67e22"/>
+      <text x="155" y="71" font-size="8" fill="white" text-anchor="middle">1000 impressions</text>
+      <line x1="255" y1="52" x2="255" y2="84" stroke="#e67e22" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+      <!-- Mismatch zone -->
+      <rect x="175" y="56" width="80" height="22" fill="rgba(231,76,60,0.2)" stroke="#e74c3c" stroke-dasharray="3,2"/>
+      <text x="215" y="71" font-size="7" fill="#e74c3c" text-anchor="middle">Job B continues</text>
+      <text x="215" y="81" font-size="7" fill="#e74c3c" text-anchor="middle">alone → colour shift!</text>
+
+      <!-- Different batch warning -->
+      <rect x="55" y="90" width="220" height="24" rx="3" fill="#fdecea" stroke="#e74c3c"/>
+      <text x="165" y="106" font-size="9" fill="#c0392b" text-anchor="middle">
+        Score = 1−(1000−834)/1000 = 0.166 = 16.6% ❌
+      </text>
+
+      <!-- Aligned example -->
+      <!-- Job A aligned -->
+      <text x="255" y="36" font-size="9" fill="#555">Job A</text>
+      <rect x="285" y="26" width="150" height="22" rx="2" fill="#4F86C6"/>
+      <text x="360" y="41" font-size="8" fill="white" text-anchor="middle">1000 impressions</text>
+      <line x1="435" y1="22" x2="435" y2="84" stroke="#27ae60" stroke-width="2" stroke-dasharray="3,2"/>
+
+      <!-- Job B aligned -->
+      <text x="255" y="66" font-size="9" fill="#555">Job B</text>
+      <rect x="285" y="56" width="150" height="22" rx="2" fill="#e67e22"/>
+      <text x="360" y="71" font-size="8" fill="white" text-anchor="middle">1000 impressions</text>
+
+      <!-- Aligned score -->
+      <rect x="285" y="90" width="150" height="24" rx="3" fill="#e8f5e9" stroke="#27ae60"/>
+      <text x="360" y="106" font-size="9" fill="#166534" text-anchor="middle">
+        Score = 1−(1000−1000)/1000 = 1.0 = 100% ✅
+      </text>
+
+      <!-- Color consistency diagram -->
+      <rect x="20" y="128" width="420" height="150" rx="8" fill="#f8f9fa" stroke="#ddd"/>
+      <text x="230" y="148" font-size="10" fill="#1a4a7a" text-anchor="middle" font-weight="bold">
+        Why Alignment = Colour Consistency
+      </text>
+
+      <!-- Press run 1 -->
+      <rect x="40" y="158" width="160" height="50" rx="4" fill="#e8f0f7" stroke="#1a4a7a"/>
+      <text x="120" y="178" font-size="9" fill="#1a4a7a" text-anchor="middle" font-weight="bold">Press Run #1 (Impressions 1–834)</text>
+      <text x="120" y="193" font-size="8" fill="#555" text-anchor="middle">Job A ✅  Job B ✅</text>
+      <text x="120" y="205" font-size="8" fill="#27ae60" text-anchor="middle">Same ink density → colours match</text>
+
+      <!-- Arrow down -->
+      <text x="230" y="200" font-size="18" fill="#555" text-anchor="middle">→</text>
+
+      <!-- Press run 2 bad -->
+      <rect x="255" y="158" width="160" height="50" rx="4" fill="#fdecea" stroke="#e74c3c"/>
+      <text x="335" y="178" font-size="9" fill="#c0392b" text-anchor="middle" font-weight="bold">Press Run #2 (Impressions 835–1000)</text>
+      <text x="335" y="193" font-size="8" fill="#555" text-anchor="middle">Job B only (Job A done)</text>
+      <text x="335" y="205" font-size="8" fill="#e74c3c" text-anchor="middle">Different ink setup → colour shift ❌</text>
+
+      <text x="230" y="270" font-size="10" fill="#1a4a7a" text-anchor="middle" font-weight="bold">
+        Mono finds layout where both jobs finish at exactly 1000 impressions → one run → no colour shift
+      </text>
+    </svg>
+    <div class="range-row">
+      <span class="range-good">100% Perfect</span>
+      <span class="range-warn">90–99% Acceptable</span>
+      <span class="range-bad">&lt; 90% Colour risk</span>
+    </div>
+  </div>
+
+  <!-- MAX OVERRUN -->
+  <div class="card">
+    <h3>Max Overrun % (Multi-SKU)</h3>
+    <div class="desc">In a multi-SKU layout with multiple jobs, each job may have a different overrun. Max Overrun is the worst case across all jobs — Mono flags this if it exceeds your tolerance.</div>
+    <div class="formula-box">
+      Max Overrun % = MAX(Overrun % across all jobs in plan)<br>
+      Default tolerance = 5%<br>
+      Warning shown if any job overrun &gt; tolerance
+    </div>
+    <svg width="100%" viewBox="0 0 460 220" style="display:block">
+      <!-- Job A -->
+      <text x="30" y="28" font-size="10" fill="#555" font-weight="bold">Job A — Musli Power — 5000 units, 9/sheet</text>
+      <rect x="30" y="36" width="380" height="28" rx="3" fill="#e8f0f7"/>
+      <rect x="30" y="36" width="374" height="28" rx="3" fill="#4F86C6" opacity="0.8"/>
+      <line x1="374" y1="30" x2="374" y2="70" stroke="#e74c3c" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <rect x="374" y="36" width="6" height="28" fill="#e74c3c" opacity="0.7"/>
+      <text x="230" y="54" font-size="9" fill="white" text-anchor="middle">5004 printed (556 impr × 9)</text>
+      <text x="415" y="54" font-size="9" fill="#e74c3c">+4 = 0.08%</text>
+
+      <!-- Job B -->
+      <text x="30" y="84" font-size="10" fill="#555" font-weight="bold">Job B — Trujoint Plus — 5000 units, 1/sheet</text>
+      <rect x="30" y="92" width="380" height="28" rx="3" fill="#e8f0f7"/>
+      <rect x="30" y="92" width="374" height="28" rx="3" fill="#e67e22" opacity="0.8"/>
+      <line x1="374" y1="86" x2="374" y2="126" stroke="#e74c3c" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <rect x="374" y="92" width="6" height="28" fill="#e74c3c" opacity="0.7"/>
+      <text x="230" y="110" font-size="9" fill="white" text-anchor="middle">5004 printed (556 impr × 1)</text>
+      <text x="415" y="110" font-size="9" fill="#e74c3c">+4 = 0.08%</text>
+
+      <!-- Max overrun callout -->
+      <rect x="30" y="138" width="400" height="38" rx="6" fill="#e8f5e9" stroke="#27ae60"/>
+      <text x="230" y="153" font-size="10" fill="#166534" text-anchor="middle" font-weight="bold">
+        Max Overrun = MAX(0.08%, 0.08%) = 0.08% ✅ Under 5% tolerance
+      </text>
+      <text x="230" y="168" font-size="9" fill="#555" text-anchor="middle">
+        Both jobs: 5004 actual ≥ 5000 required. Overrun within tolerance. No warning.
+      </text>
+
+      <!-- Warning example -->
+      <rect x="30" y="186" width="400" height="28" rx="6" fill="#fff8e1" stroke="#f9a825"/>
+      <text x="230" y="204" font-size="9" fill="#856404" text-anchor="middle">
+        If Job A needed 4999 units but 9/sheet → 556 impr → 5004 printed → 0.1% overrun — still fine
+      </text>
+    </svg>
+    <div class="range-row">
+      <span class="range-good">0–5% Acceptable</span>
+      <span class="range-warn">5–10% Warning shown</span>
+      <span class="range-bad">&gt; 10% Review plan</span>
+    </div>
+  </div>
+
+  <!-- COMPATIBILITY -->
+  <div class="card">
+    <h3>Compatibility — Hard vs Soft Constraints</h3>
+    <div class="desc">Before combining jobs on one sheet, Mono checks if they are compatible. Hard constraints BLOCK the combination. Soft constraints show warnings but don't block.</div>
+    <svg width="100%" viewBox="0 0 460 280" style="display:block">
+      <!-- Two job boxes -->
+      <rect x="20" y="20" width="180" height="120" rx="8" fill="#e8f0f7" stroke="#1a4a7a" stroke-width="2"/>
+      <text x="110" y="42" font-size="11" fill="#1a4a7a" text-anchor="middle" font-weight="bold">Job A — Musli Power</text>
+      <text x="110" y="60" font-size="10" fill="#555" text-anchor="middle">Paper: FBB</text>
+      <text x="110" y="76" font-size="10" fill="#555" text-anchor="middle">GSM: 330</text>
+      <text x="110" y="92" font-size="10" fill="#555" text-anchor="middle">Lam: UV Varnish</text>
+      <text x="110" y="108" font-size="10" fill="#555" text-anchor="middle">Colours: CMYK+1P</text>
+      <text x="110" y="124" font-size="10" fill="#555" text-anchor="middle">Stamping: None</text>
+
+      <rect x="260" y="20" width="180" height="120" rx="8" fill="#e8f0f7" stroke="#1a4a7a" stroke-width="2"/>
+      <text x="350" y="42" font-size="11" fill="#1a4a7a" text-anchor="middle" font-weight="bold">Job B — Trujoint Plus</text>
+      <text x="350" y="60" font-size="10" fill="#555" text-anchor="middle">Paper: FBB</text>
+      <text x="350" y="76" font-size="10" fill="#555" text-anchor="middle">GSM: 320</text>
+      <text x="350" y="92" font-size="10" fill="#555" text-anchor="middle">Lam: UV Varnish</text>
+      <text x="350" y="108" font-size="10" fill="#555" text-anchor="middle">Colours: CMYK+1P</text>
+      <text x="350" y="124" font-size="10" fill="#555" text-anchor="middle">Stamping: None</text>
+
+      <!-- Compatibility checker -->
+      <rect x="170" y="50" width="120" height="60" rx="6" fill="#1a4a7a"/>
+      <text x="230" y="74" font-size="9" fill="white" text-anchor="middle" font-weight="bold">Compatibility</text>
+      <text x="230" y="88" font-size="9" fill="white" text-anchor="middle">Checker</text>
+      <text x="230" y="102" font-size="9" fill="#aaa" text-anchor="middle">3 hard checks</text>
+
+      <!-- Check results -->
+      <rect x="20" y="158" width="420" height="110" rx="6" fill="#f8f9fa" stroke="#ddd"/>
+
+      <!-- Paper check -->
+      <text x="36" y="178" font-size="10" fill="#27ae60" font-weight="bold">✅ HARD</text>
+      <text x="36" y="193" font-size="9" fill="#555">Paper Type: FBB = FBB → PASS</text>
+
+      <!-- GSM check -->
+      <text x="36" y="213" font-size="10" fill="#27ae60" font-weight="bold">✅ HARD</text>
+      <text x="36" y="228" font-size="9" fill="#555">GSM: |330−320| = 10 ≤ tolerance 10 → PASS</text>
+
+      <!-- Lamination check -->
+      <text x="230" y="178" font-size="10" fill="#27ae60" font-weight="bold">✅ HARD</text>
+      <text x="230" y="193" font-size="9" fill="#555">Lamination: UV = UV → PASS</text>
+
+      <!-- Colour soft warn -->
+      <text x="230" y="213" font-size="10" fill="#27ae60" font-weight="bold">✅ SOFT</text>
+      <text x="230" y="228" font-size="9" fill="#555">Colours match → No warning</text>
+
+      <!-- Result -->
+      <rect x="100" y="244" width="260" height="20" rx="4" fill="#e8f5e9" stroke="#27ae60"/>
+      <text x="230" y="258" font-size="10" fill="#166534" text-anchor="middle" font-weight="bold">
+        ✅ COMPATIBLE — Can be imposed together
+      </text>
+    </svg>
+    <div class="example-box">
+      Hard constraint fail example:<br>
+      Job A: FBB 330gsm UV  +  Job B: ITC Safire 350gsm UV<br>
+      Paper mismatch → ❌ INCOMPATIBLE → separate sheets required
+    </div>
+  </div>
+
+</div>
+
+<div style="padding: 20px 40px; font-size: 12px; color: #aaa; border-top: 1px solid #eee; margin-top: 20px;">
+  Mono v2.0 — Monocarton Imposition Planner · Built by Deepak · 
+  <a href="https://deepakstratos-tech.github.io/monocarton-editor" style="color: #1a4a7a;">Open Mono</a>
+</div>
+
+</body>
+</html>

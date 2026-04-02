@@ -272,6 +272,10 @@ const JobsPage = ({ jobs, setJobs }) => {
                 <DesignSelector
                   onDesignSaved={setPendingDesign}
                   jobId=""
+                  declaredStyle={form.style}
+                  onStyleSuggested={(suggestedStyle) => {
+                    handleChange("style", suggestedStyle);
+                  }}
                 />
               )}
             </div>
@@ -396,6 +400,12 @@ const JobsPage = ({ jobs, setJobs }) => {
                             <DesignSelector
                               onDesignSaved={(design) => handleSaveDesignToJob(job.job_id, design)}
                               jobId={job.job_id}
+                              declaredStyle={job.style}
+                              onStyleSuggested={(suggestedStyle) => {
+                                setJobs(prev => prev.map(j =>
+                                  j.job_id === job.job_id ? { ...j, style: suggestedStyle } : j
+                                ));
+                              }}
                             />
                           </div>
                         )}

@@ -258,7 +258,7 @@ const PolygonCanvas = ({ imageBase64, imageSize, onComplete, onCancel }) => {
 };
 
 // ── MAIN DESIGN SELECTOR COMPONENT ──
-const DesignSelector = ({ onDesignSaved, jobId }) => {
+const DesignSelector = ({ onDesignSaved, jobId, declaredStyle }) => {
   const [stage, setStage] = useState("upload");
   const [fullImage, setFullImage] = useState(null);
   const [imageSize, setImageSize] = useState({ w: 0, h: 0 });
@@ -268,6 +268,7 @@ const DesignSelector = ({ onDesignSaved, jobId }) => {
   const [dragOver, setDragOver] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const fileInputRef = useRef(null);
+  const [styleDetection, setStyleDetection] = useState(null);
 
   const handleFile = async (file) => {
     if (!file) return;
@@ -318,7 +319,8 @@ const DesignSelector = ({ onDesignSaved, jobId }) => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE}/extract/crop-design`, {
+      // Step 1: Crop the design
+      const cropResponse = await fetch(`${API_BASE}/extract/crop-design`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -327,16 +329,30 @@ const DesignSelector = ({ onDesignSaved, jobId }) => {
           job_id: jobId || "",
         }),
       });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        setError(data.notes);
+      const cropData = await cropResponse.json();
+      if (!cropData.success) {
+        setError(cropData.notes);
         setLoading(false);
         return;
       }
+      setDesign(cropData);
 
-      setDesign(data);
+      // Step 2: Detect box style from polygon
+      if (declaredStyle) {
+        const detectResponse = await fetch(`${API_BASE}/extract/detect-box-style`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            polygon,
+            image_width: imageSize.w,
+            image_height: imageSize.h,
+            declared_style: declaredStyle,
+          }),
+        });
+        const detectData = await detectResponse.json();
+        setStyleDetection(detectData);
+      }
+
       setStage("previewing");
 
     } catch (err) {
@@ -465,12 +481,88 @@ const DesignSelector = ({ onDesignSaved, jobId }) => {
         </div>
       )}
 
-      {/* PREVIEWING stage */}
+      {/* STAGE: Previewing */}
       {stage === "previewing" && design && (
         <div>
           <div style={{ fontSize: 12, color: "#27ae60", fontWeight: "700", marginBottom: 10 }}>
             ✅ Design extracted — {design.polygon.length} point polygon
           </div>
+
+          {/* Box style detection result — show as popup */}
+          {styleDetection && (
+            <div style={{
+              background: styleDetection.match ? "#e8f5e9" : "#fff8e1",
+              border: `1px solid ${styleDetection.match ? "#27ae60" : "#f9a825"}`,
+              borderRadius: 10, padding: 14, marginBottom: 14,
+            }}>
+              <div style={{ fontWeight: "800", fontSize: 13, marginBottom: 8, color: styleDetection.match ? "#166534" : "#856404" }}>
+                {styleDetection.match ? "✅ Box Style Confirmed" : "⚠️ Box Style Mismatch Detected"}
+              </div>
+
+              <div style={{ display: "flex", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+                <div style={{ background: "white", borderRadius: 6, padding: "6px 10px", fontSize: 12 }}>
+                  <div style={{ fontSize: 10, color: "#888" }}>You selected</div>
+                  <div style={{ fontWeight: "700", color: "#1a4a7a" }}>{styleDetection.declared_style_name}</div>
+                </div>
+                <div style={{ fontSize: 18, color: "#aaa", display: "flex", alignItems: "center" }}>→</div>
+                <div style={{
+                  background: styleDetection.match ? "#e8f5e9" : "#fdecea",
+                  borderRadius: 6, padding: "6px 10px", fontSize: 12,
+                }}>
+                  <div style={{ fontSize: 10, color: "#888" }}>Polygon suggests</div>
+                  <div style={{ fontWeight: "700", color: styleDetection.match ? "#166534" : "#c0392b" }}>
+                    {styleDetection.detected_style_name}
+                  </div>
+                </div>
+                <div style={{
+                  background: "#f8f9fa", borderRadius: 6, padding: "6px 10px", fontSize: 12,
+                }}>
+                  <div style={{ fontSize: 10, color: "#888" }}>Confidence</div>
+                  <div style={{ fontWeight: "700", color: styleDetection.confidence === "High" ? "#27ae60" : styleDetection.confidence === "Medium" ? "#f39c12" : "#e74c3c" }}>
+                    {styleDetection.confidence}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ fontSize: 12, color: "#555", marginBottom: 10, lineHeight: 1.5 }}>
+                {styleDetection.suggestion}
+              </div>
+
+              {/* Ratio breakdown */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                <div style={{ background: "#dbeafe", borderRadius: 6, padding: "4px 8px", fontSize: 11 }}>
+                  Top flap: <strong>{(styleDetection.top_ratio * 100).toFixed(1)}%</strong> of flat height
+                </div>
+                <div style={{ background: "#fce7f3", borderRadius: 6, padding: "4px 8px", fontSize: 11 }}>
+                  Bottom flap: <strong>{(styleDetection.bottom_ratio * 100).toFixed(1)}%</strong> of flat height
+                </div>
+              </div>
+
+              {/* Suggest change button */}
+              {!styleDetection.match && styleDetection.confidence !== "Low" && onStyleSuggested && (
+                <button
+                  onClick={() => onStyleSuggested(styleDetection.detected_style)}
+                  style={{
+                    padding: "7px 14px", borderRadius: 6, border: "none",
+                    background: "#f39c12", color: "white", fontWeight: "700",
+                    cursor: "pointer", fontSize: 12, marginRight: 8,
+                  }}>
+                  ✓ Change to {styleDetection.detected_style_name}
+                </button>
+              )}
+              <button
+                onClick={() => setStyleDetection(null)}
+                style={{
+                  padding: "7px 14px", borderRadius: 6,
+                  border: "1px solid #ddd", background: "white",
+                  color: "#666", cursor: "pointer", fontSize: 12,
+                }}>
+                Keep {styleDetection.declared_style_name}
+              </button>
+            </div>
+          )}
+
+          {/* Design preview */}
           <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 10, color: "#888", marginBottom: 4 }}>DESIGN</div>
@@ -485,6 +577,7 @@ const DesignSelector = ({ onDesignSaved, jobId }) => {
               </div>
             </div>
           </div>
+
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={handleSave} style={{
               flex: 1, padding: "10px 0", borderRadius: 7, border: "none",
